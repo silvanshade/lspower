@@ -122,7 +122,7 @@ impl LanguageServer for Backend {
 async fn main() {
     env_logger::init();
 
-    let listener = TcpListener::bind("127.0.0.1:9257").await.unwrap();
+    let mut listener = TcpListener::bind("127.0.0.1:9257").await.unwrap();
     let (stream, _) = listener.accept().await.unwrap();
     let (read, write) = tokio::io::split(stream);
 
