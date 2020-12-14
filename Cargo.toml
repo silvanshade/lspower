@@ -30,7 +30,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "0.2", features = ["io-std", "io-util", "net", "time"] }
 tokio-util = { version = "0.3", features = ["codec"] }
-lspower-macros = { version = "0.3", path = "./lspower-macros" }
+lspower-macros = { version = "0.1", path = "./lspower-macros" }
 tower-service = "0.3"
 
 [dev-dependencies]
