@@ -1,7 +1,6 @@
 [package]
 name = "lspower"
-version = "0.13.3"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "RSLint developers"]
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
 edition = "2018"
 description = "Language Server Protocol implementation based on Tower"
 license = "MIT OR Apache-2.0"
