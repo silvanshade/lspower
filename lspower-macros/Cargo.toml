@@ -1,7 +1,7 @@
 [package]
 name = "lspower-macros"
 version = "0.3.0"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "RSLint developers"]
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
 description = "Internal procedural macros for lspower"
 edition = "2018"
 license = "MIT OR Apache-2.0"
