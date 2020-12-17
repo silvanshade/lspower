@@ -833,10 +833,10 @@ pub trait LanguageServer: Send + Sync + 'static {
         Err(Error::method_not_found())
     }
 
-    /// [`textDocument/semanticTokens/full`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
-    #[rpc(name = "textDocument/semanticTokens/refresh")]
+    /// [`workspace/semanticTokens/full`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
+    #[rpc(name = "workspace/semanticTokens/refresh")]
     async fn semantic_tokens_refresh(&self) -> Result<()> {
-        error!("Got a textDocument/semanticTokens/refresh request, but it is not implemented");
+        error!("Got a workspace/semanticTokens/refresh request, but it is not implemented");
         Err(Error::method_not_found())
     }
 
