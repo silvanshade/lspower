@@ -27,13 +27,12 @@ impl LanguageServer for Backend {
                     commands: vec!["dummy.do_something".to_string()],
                     work_done_progress_options: Default::default(),
                 }),
-                workspace: Some(WorkspaceCapability {
-                    workspace_folders: Some(WorkspaceFolderCapability {
+                workspace: Some(WorkspaceServerCapabilities {
+                    workspace_folders: Some(WorkspaceFoldersServerCapabilities {
                         supported: Some(true),
-                        change_notifications: Some(
-                            WorkspaceFolderCapabilityChangeNotifications::Bool(true),
-                        ),
+                        change_notifications: Some(OneOf::Left(true)),
                     }),
+                    ..Default::default()
                 }),
                 ..ServerCapabilities::default()
             },
