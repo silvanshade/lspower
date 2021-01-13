@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["lspower"] = [{"text":"impl Serialize for ErrorCode","synthetic":false,"types":[]},{"text":"impl Serialize for Error","synthetic":false,"types":[]},{"text":"impl Serialize for Id","synthetic":false,"types":[]},{"text":"impl Serialize for Response","synthetic":false,"types":[]},{"text":"impl Serialize for ClientRequest","synthetic":false,"types":[]},{"text":"impl Serialize for Outgoing","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
