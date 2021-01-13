@@ -2,14 +2,20 @@
 //!
 //! This crate should not be used directly.
 
-extern crate proc_macro;
-
 use heck::CamelCase;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    parse_macro_input, AttributeArgs, FnArg, ItemTrait, Lit, Meta, MetaNameValue, NestedMeta,
-    ReturnType, TraitItem,
+    parse_macro_input,
+    AttributeArgs,
+    FnArg,
+    ItemTrait,
+    Lit,
+    Meta,
+    MetaNameValue,
+    NestedMeta,
+    ReturnType,
+    TraitItem,
 };
 
 /// Macro for generating LSP server implementation from [`lsp-types`](https://docs.rs/lsp-types).
@@ -21,7 +27,7 @@ pub fn rpc(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(attr as AttributeArgs);
 
     match attr_args.as_slice() {
-        [] => {}
+        [] => {},
         [NestedMeta::Meta(meta)] if meta.path().is_ident("name") => return item,
         _ => panic!("unexpected attribute arguments"),
     }
@@ -45,12 +51,12 @@ struct MethodCall<'a> {
     result: Option<&'a syn::Type>,
 }
 
-fn parse_method_calls<'a>(lang_server_trait: &'a ItemTrait) -> Vec<MethodCall<'a>> {
+fn parse_method_calls(lang_server_trait: &ItemTrait) -> Vec<MethodCall> {
     let mut calls = Vec::new();
 
     for item in &lang_server_trait.items {
         let method = match item {
-            TraitItem::Method(m) if m.sig.ident.to_string() == "request_else" => continue,
+            TraitItem::Method(m) if m.sig.ident == "request_else" => continue,
             TraitItem::Method(m) => m,
             _ => continue,
         };
@@ -61,9 +67,9 @@ fn parse_method_calls<'a>(lang_server_trait: &'a ItemTrait) -> Vec<MethodCall<'a
             .filter_map(|attr| attr.parse_args::<Meta>().ok())
             .filter(|meta| meta.path().is_ident("name"))
             .find_map(|meta| match meta {
-                Meta::NameValue(MetaNameValue {
-                    lit: Lit::Str(lit), ..
-                }) => Some(lit.value().trim_matches('"').to_owned()),
+                Meta::NameValue(MetaNameValue { lit: Lit::Str(lit), .. }) => {
+                    Some(lit.value().trim_matches('"').to_owned())
+                },
                 _ => panic!("expected string literal for `#[rpc(name = ???)]` attribute"),
             })
             .expect("expected `#[rpc(name = \"foo\")]` attribute");
@@ -131,19 +137,19 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
             let handler = &method.handler_name;
             match (method.result.is_some(), method.params.is_some()) {
                 (true, true) if rpc_name == "initialize" => quote! {
-                    (ServerMethod::#var_name { params: Valid(p), id }, State::Uninitialized) => {
-                        state.set(State::Initializing);
+                    (ServerMethod::#var_name { params: Valid(p), id }, StateKind::Uninitialized) => {
+                        state.set(StateKind::Initializing);
                         let state = state.clone();
                         Box::pin(async move {
                             let res = match server.#handler(p).await {
                                 Ok(result) => {
                                     let result = serde_json::to_value(result).unwrap();
                                     info!("language server initialized");
-                                    state.set(State::Initialized);
+                                    state.set(StateKind::Initialized);
                                     Response::ok(id, result)
                                 }
                                 Err(error) => {
-                                    state.set(State::Uninitialized);
+                                    state.set(StateKind::Uninitialized);
                                     Response::error(Some(id), error)
                                 },
                             };
@@ -151,21 +157,21 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                             Ok(Some(Outgoing::Response(res)))
                         })
                     }
-                    (ServerMethod::#var_name { params: Invalid(e), id }, State::Uninitialized) => {
+                    (ServerMethod::#var_name { params: Invalid(e), id }, StateKind::Uninitialized) => {
                         error!("invalid parameters for {:?} request", #rpc_name);
                         let res = Response::error(Some(id), Error::invalid_params(e));
                         future::ok(Some(Outgoing::Response(res))).boxed()
                     }
-                    (ServerMethod::#var_name { id, .. }, State::Initializing) => {
+                    (ServerMethod::#var_name { id, .. }, StateKind::Initializing) => {
                         warn!("received duplicate `initialize` request, ignoring");
                         let res = Response::error(Some(id), Error::invalid_request());
                         future::ok(Some(Outgoing::Response(res))).boxed()
                     }
                 },
                 (true, false) if rpc_name == "shutdown" => quote! {
-                    (ServerMethod::#var_name { id }, State::Initialized) => {
+                    (ServerMethod::#var_name { id }, StateKind::Initialized) => {
                         info!("shutdown request received, shutting down");
-                        state.set(State::ShutDown);
+                        state.set(StateKind::ShutDown);
                         pending
                             .execute(id, async move { server.#handler().await })
                             .map(|v| Ok(Some(Outgoing::Response(v))))
@@ -173,20 +179,20 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                     }
                 },
                 (true, true) => quote! {
-                    (ServerMethod::#var_name { params: Valid(p), id }, State::Initialized) => {
+                    (ServerMethod::#var_name { params: Valid(p), id }, StateKind::Initialized) => {
                         pending
                             .execute(id, async move { server.#handler(p).await })
                             .map(|v| Ok(Some(Outgoing::Response(v))))
                             .boxed()
                     }
-                    (ServerMethod::#var_name { params: Invalid(e), id }, State::Initialized) => {
+                    (ServerMethod::#var_name { params: Invalid(e), id }, StateKind::Initialized) => {
                         error!("invalid parameters for {:?} request", #rpc_name);
                         let res = Response::error(Some(id), Error::invalid_params(e));
                         future::ok(Some(Outgoing::Response(res))).boxed()
                     }
                 },
                 (true, false) => quote! {
-                    (ServerMethod::#var_name { id }, State::Initialized) => {
+                    (ServerMethod::#var_name { id }, StateKind::Initialized) => {
                         pending
                             .execute(id, async move { server.#handler().await })
                             .map(|v| Ok(Some(Outgoing::Response(v))))
@@ -194,16 +200,16 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                     }
                 },
                 (false, true) => quote! {
-                    (ServerMethod::#var_name { params: Valid(p) }, State::Initialized) => {
+                    (ServerMethod::#var_name { params: Valid(p) }, StateKind::Initialized) => {
                         Box::pin(async move { server.#handler(p).await; Ok(None) })
                     }
-                    (ServerMethod::#var_name { .. }, State::Initialized) => {
+                    (ServerMethod::#var_name { .. }, StateKind::Initialized) => {
                         warn!("invalid parameters for {:?} notification", #rpc_name);
                         future::ok(None).boxed()
                     }
                 },
                 (false, false) => quote! {
-                    (ServerMethod::#var_name, State::Initialized) => {
+                    (ServerMethod::#var_name, StateKind::Initialized) => {
                         Box::pin(async move { server.#handler().await; Ok(None) })
                     }
                 },
@@ -213,23 +219,19 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
 
     quote! {
         mod generated_impl {
-            use std::future::Future;
-            use std::pin::Pin;
-            use std::sync::Arc;
-
+            use super::{#trait_name};
+            use crate::{
+                jsonrpc::{not_initialized_error, Error, ErrorCode, Id, Outgoing, Response, ServerRequests, Version},
+                server::{State, StateKind},
+                service::ExitedError,
+            };
             use futures::{future, FutureExt};
             use log::{error, info, warn};
-            use lsp_types::*;
-            use lsp_types::request::{
-                GotoDeclarationParams, GotoImplementationParams, GotoTypeDefinitionParams,
+            use lsp::{
+                request::{GotoDeclarationParams, GotoImplementationParams, GotoTypeDefinitionParams},
+                *,
             };
-
-            use super::{#trait_name, ServerState, State};
-            use crate::jsonrpc::{
-                not_initialized_error, Error, ErrorCode, Id, Outgoing, Response, ServerRequests,
-                Version,
-            };
-            use crate::service::ExitedError;
+            use std::{future::Future, pin::Pin, sync::Arc};
 
             /// A client-to-server LSP request.
             #[derive(Clone, Debug, PartialEq, serde::Deserialize)]
@@ -291,7 +293,7 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
 
             pub(crate) fn handle_request<T: #trait_name>(
                 server: T,
-                state: &Arc<ServerState>,
+                state: &Arc<State>,
                 pending: &ServerRequests,
                 request: ServerRequest,
             ) -> Pin<Box<dyn Future<Output = Result<Option<Outgoing>, ExitedError>> + Send>> {
@@ -314,17 +316,17 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
 
                 match (method, state.get()) {
                     #route_match_arms
-                    (ServerMethod::CancelRequest { id }, State::Initialized) => {
+                    (ServerMethod::CancelRequest { id }, StateKind::Initialized) => {
                         pending.cancel(&id);
                         future::ok(None).boxed()
                     }
                     (ServerMethod::Exit, _) => {
                         info!("exit notification received, stopping");
-                        state.set(State::Exited);
+                        state.set(StateKind::Exited);
                         pending.cancel_all();
                         future::ok(None).boxed()
                     }
-                    (other, State::Uninitialized) => Box::pin(match other.id().cloned() {
+                    (other, StateKind::Uninitialized) => Box::pin(match other.id().cloned() {
                         None => future::ok(None),
                         Some(id) => {
                             let res = Response::error(Some(id), not_initialized_error());

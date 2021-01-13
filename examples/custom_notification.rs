@@ -1,7 +1,11 @@
-use lspower::jsonrpc::{Error, Result};
-use lspower::lsp_types::notification::Notification;
-use lspower::lsp_types::*;
-use lspower::{Client, LanguageServer, LspService, Server};
+use lspower::{
+    jsonrpc::{Error, Result},
+    lsp::{notification::Notification, *},
+    Client,
+    LanguageServer,
+    LspService,
+    Server,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -55,15 +59,10 @@ impl LanguageServer for Backend {
     async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<Value>> {
         if params.command == "custom.notification" {
             self.client
-                .send_custom_notification::<CustomNotification>(CustomNotificationParams::new(
-                    "Hello", "Message",
-                ))
+                .send_custom_notification::<CustomNotification>(CustomNotificationParams::new("Hello", "Message"))
                 .await;
             self.client
-                .log_message(
-                    MessageType::Info,
-                    format!("Command executed with params: {:?}", params),
-                )
+                .log_message(MessageType::Info, format!("Command executed with params: {:?}", params))
                 .await;
             Ok(None)
         } else {
@@ -80,8 +79,5 @@ async fn main() {
     let stdout = tokio::io::stdout();
 
     let (service, messages) = LspService::new(|client| Backend { client });
-    Server::new(stdin, stdout)
-        .interleave(messages)
-        .serve(service)
-        .await;
+    Server::new(stdin, stdout).interleave(messages).serve(service).await;
 }

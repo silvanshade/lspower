@@ -1,43 +1,69 @@
 [package]
+edition = "2018"
 name = "lspower"
 version = "0.3.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
-edition = "2018"
-description = "Language Server Protocol implementation based on Tower"
-license = "MIT OR Apache-2.0"
-homepage = "https://github.com/rslint/lspower"
-repository = "https://github.com/rslint/lspower"
+license = "Apache-2.0 WITH LLVM-exception"
+repository = "https://github.com/darinmorrison/lspower"
 documentation = "https://docs.rs/lspower/"
 readme = "README.md"
 categories = ["asynchronous"]
 keywords = ["language-server", "lsp", "tower"]
+description = """
+A lightweight framework for implementing LSP servers.
+"""
 exclude = ["./lspower-macros"]
 
+[badges]
+maintenance = { status = "experimental" }
+
 [features]
-default = ["proposed"]
-proposed = ["lsp-types/proposed"]
+default = ["tokio", "tokio-util"]
+runtime-independent = ["async-codec-lite"]
 
 [dependencies]
+anyhow = "1.0"
+async-channel = "1.5"
+async-compat = "0.1"
+async-oneshot = "0.4"
 async-trait = "0.1"
 auto_impl = "0.4"
 bytes = "1.0"
 dashmap = "4.0"
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
 log = "0.4"
-lsp-types = "0.86"
-nom = { version = "6.0", default-features = false, features = ["std"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time"] }
-tokio-util = { version = "0.6", features = ["codec"] }
-lspower-macros = { version = "0.1", path = "./lspower-macros" }
+lsp = { version = "0.86", package = "lsp-types" }
+lspower-macros = { version = "0.1", path = "lspower-macros" }
+nom = "6.0"
+serde = { version = "1.0" }
+serde_json = { version = "1.0" }
+thiserror = "1.0"
 tower-service = "0.3"
+
+[dependencies.async-codec-lite]
+git = "https://github.com/darinmorrison/async-codec-lite"
+branch = "main"
+optional = true
+
+[dependencies.tokio]
+version = "1.0"
+features = ["rt", "rt-multi-thread", "time"]
+optional = true
+
+[dependencies.tokio-util]
+version = "0.6"
+features = ["codec"]
+optional = true
 
 [dev-dependencies]
 env_logger = "0.8"
-tokio = { version = "1.0", features = ["io-std", "io-util", "macros", "net"] }
+tokio = { version = "1.0", features = ["io-std", "io-util", "macros", "net", "rt-multi-thread"] }
 tower-test = "0.4"
 
 [workspace]
-members = [".", "./lspower-macros"]
+members = [
+  ".",
+  "lspower-macros",
+  "xtask",
+]
 default-members = ["."]

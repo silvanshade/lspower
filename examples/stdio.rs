@@ -1,6 +1,4 @@
-use lspower::jsonrpc::Result;
-use lspower::lsp_types::*;
-use lspower::{Client, LanguageServer, LspService, Server};
+use lspower::{jsonrpc::Result, lsp::*, Client, LanguageServer, LspService, Server};
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -14,9 +12,7 @@ impl LanguageServer for Backend {
         Ok(InitializeResult {
             server_info: None,
             capabilities: ServerCapabilities {
-                text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                    TextDocumentSyncKind::Incremental,
-                )),
+                text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::Incremental)),
                 completion_provider: Some(CompletionOptions {
                     resolve_provider: Some(false),
                     trigger_characters: Some(vec![".".to_string()]),
@@ -39,9 +35,7 @@ impl LanguageServer for Backend {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        self.client
-            .log_message(MessageType::Info, "initialized!")
-            .await;
+        self.client.log_message(MessageType::Info, "initialized!").await;
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -67,9 +61,7 @@ impl LanguageServer for Backend {
     }
 
     async fn execute_command(&self, _: ExecuteCommandParams) -> Result<Option<Value>> {
-        self.client
-            .log_message(MessageType::Info, "command executed!")
-            .await;
+        self.client.log_message(MessageType::Info, "command executed!").await;
 
         match self
             .client
@@ -85,27 +77,19 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, _: DidOpenTextDocumentParams) {
-        self.client
-            .log_message(MessageType::Info, "file opened!")
-            .await;
+        self.client.log_message(MessageType::Info, "file opened!").await;
     }
 
     async fn did_change(&self, _: DidChangeTextDocumentParams) {
-        self.client
-            .log_message(MessageType::Info, "file changed!")
-            .await;
+        self.client.log_message(MessageType::Info, "file changed!").await;
     }
 
     async fn did_save(&self, _: DidSaveTextDocumentParams) {
-        self.client
-            .log_message(MessageType::Info, "file saved!")
-            .await;
+        self.client.log_message(MessageType::Info, "file saved!").await;
     }
 
     async fn did_close(&self, _: DidCloseTextDocumentParams) {
-        self.client
-            .log_message(MessageType::Info, "file closed!")
-            .await;
+        self.client.log_message(MessageType::Info, "file closed!").await;
     }
 
     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -124,8 +108,5 @@ async fn main() {
     let stdout = tokio::io::stdout();
 
     let (service, messages) = LspService::new(|client| Backend { client });
-    Server::new(stdin, stdout)
-        .interleave(messages)
-        .serve(service)
-        .await;
+    Server::new(stdin, stdout).interleave(messages).serve(service).await;
 }

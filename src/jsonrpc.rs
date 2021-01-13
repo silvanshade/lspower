@@ -1,22 +1,21 @@
 //! A subset of JSON-RPC types used by the Language Server Protocol.
 
-pub use self::error::{Error, ErrorCode};
-pub use crate::generated_impl::ServerRequest;
-
-pub(crate) use self::pending::{ClientRequests, ServerRequests};
-
-use std::borrow::Cow;
-use std::fmt::{self, Debug, Display, Formatter};
-
-use lsp_types::notification::Notification;
-use lsp_types::request::Request;
-use serde::de::{self, Deserializer};
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
 mod error;
 mod pending;
+
+pub use self::error::{Error, ErrorCode};
+pub(crate) use self::pending::{ClientRequests, ServerRequests};
+use serde::{
+    de::{self, Deserializer},
+    ser::Serializer,
+    Deserialize,
+    Serialize,
+};
+use serde_json::Value;
+use std::{
+    borrow::Cow,
+    fmt::{self, Debug, Display, Formatter},
+};
 
 /// A specialized [`Result`] error type for JSON-RPC handlers.
 ///
@@ -52,7 +51,6 @@ pub struct Response {
 
 impl Response {
     /// Creates a new successful response from a request ID and `Error` object.
-    #[inline]
     pub const fn ok(id: Id, result: Value) -> Self {
         Response {
             jsonrpc: Version,
@@ -61,7 +59,6 @@ impl Response {
     }
 
     /// Creates a new error response from a request ID and `Error` object.
-    #[inline]
     pub const fn error(id: Option<Id>, error: Error) -> Self {
         Response {
             jsonrpc: Version,
@@ -70,7 +67,6 @@ impl Response {
     }
 
     /// Creates a new response from a request ID and either an `Ok(Value)` or `Err(Error)` body.
-    #[inline]
     pub fn from_parts(id: Id, body: Result<Value>) -> Self {
         match body {
             Ok(result) => Response::ok(id, result),
@@ -80,7 +76,6 @@ impl Response {
 
     /// Splits the response into a request ID paired with either an `Ok(Value)` or `Err(Error)` to
     /// signify whether the response is a success or failure.
-    #[inline]
     pub fn into_parts(self) -> (Option<Id>, Result<Value>) {
         match self.kind {
             ResponseKind::Ok { id, result } => (Some(id), Ok(result)),
@@ -89,7 +84,6 @@ impl Response {
     }
 
     /// Returns the corresponding request ID, if any.
-    #[inline]
     pub fn id(&self) -> Option<&Id> {
         match self.kind {
             ResponseKind::Ok { ref id, .. } => Some(id),
@@ -112,7 +106,7 @@ enum ResponseKind {
 #[serde(untagged)]
 pub enum Incoming {
     /// Request intended for the language server.
-    Request(ServerRequest),
+    Request(crate::generated_impl::ServerRequest),
     /// Response to a server-to-client request.
     Response(Response),
 }
@@ -129,7 +123,7 @@ pub struct ClientRequest {
 
 impl ClientRequest {
     /// Constructs a JSON-RPC request from its corresponding LSP type.
-    pub(crate) fn request<R: Request>(id: u64, params: R::Params) -> Self {
+    pub(crate) fn request<R: lsp::request::Request>(id: u64, params: R::Params) -> Self {
         // Since `R::Params` come from the `lsp-types` crate and validity is enforced via the
         // `Request` trait, the `unwrap()` call below should never fail.
         ClientRequest {
@@ -143,7 +137,7 @@ impl ClientRequest {
     }
 
     /// Constructs a JSON-RPC notification from its corresponding LSP type.
-    pub(crate) fn notification<N: Notification>(params: N::Params) -> Self {
+    pub(crate) fn notification<N: lsp::notification::Notification>(params: N::Params) -> Self {
         // Since `N::Params` comes from the `lsp-types` crate and validity is enforced via the
         // `Notification` trait, the `unwrap()` call below should never fail.
         ClientRequest {
@@ -243,37 +237,5 @@ pub(crate) fn not_initialized_error() -> Error {
         code: ErrorCode::ServerError(-32002),
         message: "Server not initialized".to_string(),
         data: None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    use super::*;
-
-    #[test]
-    fn incoming_from_str_or_value() {
-        let v = json!({"jsonrpc":"2.0","method":"initialize","params":{"capabilities":{}},"id":1});
-        let from_str: Incoming = serde_json::from_str(&v.to_string()).unwrap();
-        let from_value: Incoming = serde_json::from_value(v).unwrap();
-        assert_eq!(from_str, from_value);
-    }
-
-    #[test]
-    fn outgoing_from_str_or_value() {
-        let v = json!({"jsonrpc":"2.0","result":{},"id":1});
-        let from_str: Outgoing = serde_json::from_str(&v.to_string()).unwrap();
-        let from_value: Outgoing = serde_json::from_value(v).unwrap();
-        assert_eq!(from_str, from_value);
-    }
-
-    #[test]
-    fn parses_invalid_server_request() {
-        let unknown_method = json!({"jsonrpc":"2.0","method":"foo"});
-        let _: Incoming = serde_json::from_value(unknown_method).unwrap();
-
-        let unknown_method_with_id = json!({"jsonrpc":"2.0","method":"foo","id":1});
-        let _: Incoming = serde_json::from_value(unknown_method_with_id).unwrap();
     }
 }

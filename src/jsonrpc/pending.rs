@@ -1,23 +1,21 @@
 //! Hashmaps for tracking pending JSON-RPC requests.
 
-use std::fmt::{self, Debug, Formatter};
-use std::future::Future;
-use std::sync::Arc;
-
+use super::{Error, Id, Response, Result};
 use dashmap::{mapref::entry::Entry, DashMap};
-use futures::channel::oneshot;
-use futures::future::{self, Either};
+use futures::future;
 use log::{info, warn};
 use serde::Serialize;
-
-use super::{Error, Id, Response, Result};
+use std::{
+    fmt::{self, Debug, Formatter},
+    future::Future,
+    sync::Arc,
+};
 
 /// A hashmap containing pending server requests, keyed by request ID.
 pub struct ServerRequests(Arc<DashMap<Id, future::AbortHandle>>);
 
 impl ServerRequests {
     /// Creates a new pending server requests map.
-    #[inline]
     pub fn new() -> Self {
         ServerRequests(Arc::new(DashMap::new()))
     }
@@ -36,7 +34,7 @@ impl ServerRequests {
             entry.insert(abort_handle);
 
             let requests = self.0.clone();
-            Either::Left(async move {
+            future::Either::Left(async move {
                 let abort_result = handler_fut.await;
                 requests.remove(&id); // Remove abort handle now to avoid double cancellation.
 
@@ -48,7 +46,7 @@ impl ServerRequests {
                 }
             })
         } else {
-            Either::Right(async { Response::error(Some(id), Error::invalid_request()) })
+            future::Either::Right(async { Response::error(Some(id), Error::invalid_request()) })
         }
     }
 
@@ -56,7 +54,6 @@ impl ServerRequests {
     ///
     /// This will force the future to resolve to a "canceled" error response. If the future has
     /// already completed, this method call will do nothing.
-    #[inline]
     pub fn cancel(&self, id: &Id) {
         if let Some((_, handle)) = self.0.remove(id) {
             handle.abort();
@@ -70,7 +67,6 @@ impl ServerRequests {
     }
 
     /// Cancels all pending request handlers, if any.
-    #[inline]
     pub fn cancel_all(&self) {
         self.0.retain(|_, handle| {
             handle.abort();
@@ -88,11 +84,10 @@ impl Debug for ServerRequests {
 }
 
 /// A hashmap containing pending client requests, keyed by request ID.
-pub struct ClientRequests(DashMap<Id, oneshot::Sender<Response>>);
+pub struct ClientRequests(DashMap<Id, async_oneshot::Sender<Response>>);
 
 impl ClientRequests {
     /// Creates a new pending client requests map.
-    #[inline]
     pub fn new() -> Self {
         ClientRequests(DashMap::new())
     }
@@ -100,7 +95,6 @@ impl ClientRequests {
     /// Inserts the given response into the map.
     ///
     /// The corresponding `.wait()` future will then resolve to the given value.
-    #[inline]
     pub fn insert(&self, r: Response) {
         match r.id() {
             None => warn!("received response with request ID of `null`, ignoring"),
@@ -117,14 +111,13 @@ impl ClientRequests {
     ///
     /// Panics if the request ID is already in the hashmap and is pending a matching response. This
     /// should never happen provided that a monotonically increasing `id` value is used.
-    #[inline]
     pub fn wait(&self, id: Id) -> impl Future<Output = Response> + Send + 'static {
         match self.0.entry(id) {
             Entry::Vacant(entry) => {
-                let (tx, rx) = oneshot::channel();
+                let (tx, rx) = async_oneshot::oneshot();
                 entry.insert(tx);
                 async { rx.await.expect("sender already dropped") }
-            }
+            },
             _ => panic!("concurrent waits for the same request ID can't happen, this is a bug"),
         }
     }
@@ -140,9 +133,8 @@ impl Debug for ClientRequests {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
-
     use serde_json::json;
+    use std::time::Duration;
 
     use super::*;
 

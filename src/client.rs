@@ -1,26 +1,18 @@
 //! Types for sending data to and from the language client.
 
-use std::fmt::{self, Debug, Display, Formatter};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-
-use futures::channel::mpsc::Sender;
-use futures::sink::SinkExt;
-use log::{error, trace};
-use lsp_types::notification::{Notification, *};
-use lsp_types::request::{Request, *};
-use lsp_types::*;
-use serde::Serialize;
-use serde_json::Value;
-
-use super::jsonrpc::{self, ClientRequest, ClientRequests, Error, ErrorCode, Id, Outgoing, Result};
-use super::{ServerState, State};
+use std::{
+    fmt::{self, Debug, Formatter},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+};
 
 struct ClientInner {
-    sender: Sender<Outgoing>,
+    sender: async_channel::Sender<crate::jsonrpc::Outgoing>,
     request_id: AtomicU64,
-    pending_requests: Arc<ClientRequests>,
-    state: Arc<ServerState>,
+    pending_requests: Arc<crate::jsonrpc::ClientRequests>,
+    state: Arc<crate::server::State>,
 }
 
 /// Handle for communicating with the language client.
@@ -36,9 +28,9 @@ pub struct Client {
 
 impl Client {
     pub(super) fn new(
-        sender: Sender<Outgoing>,
-        pending_requests: Arc<ClientRequests>,
-        state: Arc<ServerState>,
+        sender: async_channel::Sender<crate::jsonrpc::Outgoing>,
+        pending_requests: Arc<crate::jsonrpc::ClientRequests>,
+        state: Arc<crate::server::State>,
     ) -> Self {
         Client {
             inner: Arc::new(ClientInner {
@@ -55,8 +47,8 @@ impl Client {
     /// This corresponds to the [`window/logMessage`] notification.
     ///
     /// [`window/logMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_logMessage
-    pub async fn log_message<M: Display>(&self, typ: MessageType, message: M) {
-        self.send_notification::<LogMessage>(LogMessageParams {
+    pub async fn log_message<M: std::fmt::Display>(&self, typ: lsp::MessageType, message: M) {
+        self.send_notification::<lsp::notification::LogMessage>(lsp::LogMessageParams {
             typ,
             message: message.to_string(),
         })
@@ -68,8 +60,8 @@ impl Client {
     /// This corresponds to the [`window/showMessage`] notification.
     ///
     /// [`window/showMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessage
-    pub async fn show_message<M: Display>(&self, typ: MessageType, message: M) {
-        self.send_notification::<ShowMessage>(ShowMessageParams {
+    pub async fn show_message<M: std::fmt::Display>(&self, typ: lsp::MessageType, message: M) {
+        self.send_notification::<lsp::notification::ShowMessage>(lsp::ShowMessageParams {
             typ,
             message: message.to_string(),
         })
@@ -84,13 +76,13 @@ impl Client {
     /// This corresponds to the [`window/showMessageRequest`] request.
     ///
     /// [`window/showMessageRequest`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessageRequest
-    pub async fn show_message_request<M: Display>(
+    pub async fn show_message_request<M: std::fmt::Display>(
         &self,
-        typ: MessageType,
+        typ: lsp::MessageType,
         message: M,
-        actions: Option<Vec<MessageActionItem>>,
-    ) -> Result<Option<MessageActionItem>> {
-        self.send_request::<ShowMessageRequest>(ShowMessageRequestParams {
+        actions: Option<Vec<lsp::MessageActionItem>>,
+    ) -> crate::jsonrpc::Result<Option<lsp::MessageActionItem>> {
+        self.send_request::<lsp::request::ShowMessageRequest>(lsp::ShowMessageRequestParams {
             typ,
             message: message.to_string(),
             actions,
@@ -103,15 +95,15 @@ impl Client {
     /// This corresponds to the [`telemetry/event`] notification.
     ///
     /// [`telemetry/event`]: https://microsoft.github.io/language-server-protocol/specification#telemetry_event
-    pub async fn telemetry_event<S: Serialize>(&self, data: S) {
+    pub async fn telemetry_event<S: serde::Serialize>(&self, data: S) {
         match serde_json::to_value(data) {
-            Err(e) => error!("invalid JSON in `telemetry/event` notification: {}", e),
+            Err(e) => log::error!("invalid JSON in `telemetry/event` notification: {}", e),
             Ok(mut value) => {
                 if !value.is_null() && !value.is_array() && !value.is_object() {
-                    value = Value::Array(vec![value]);
+                    value = serde_json::Value::Array(vec![value]);
                 }
-                self.send_notification::<TelemetryEvent>(value).await;
-            }
+                self.send_notification::<lsp::notification::TelemetryEvent>(value).await;
+            },
         }
     }
 
@@ -127,8 +119,8 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
-    pub async fn register_capability(&self, registrations: Vec<Registration>) -> Result<()> {
-        self.send_request_initialized::<RegisterCapability>(RegistrationParams { registrations })
+    pub async fn register_capability(&self, registrations: Vec<lsp::Registration>) -> crate::jsonrpc::Result<()> {
+        self.send_request_initialized::<lsp::request::RegisterCapability>(lsp::RegistrationParams { registrations })
             .await
     }
 
@@ -144,8 +136,11 @@ impl Client {
     /// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
-    pub async fn unregister_capability(&self, unregisterations: Vec<Unregistration>) -> Result<()> {
-        self.send_request_initialized::<UnregisterCapability>(UnregistrationParams {
+    pub async fn unregister_capability(
+        &self,
+        unregisterations: Vec<lsp::Unregistration>,
+    ) -> crate::jsonrpc::Result<()> {
+        self.send_request_initialized::<lsp::request::UnregisterCapability>(lsp::UnregistrationParams {
             unregisterations,
         })
         .await
@@ -170,8 +165,8 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
-    pub async fn workspace_folders(&self) -> Result<Option<Vec<WorkspaceFolder>>> {
-        self.send_request_initialized::<WorkspaceFoldersRequest>(())
+    pub async fn workspace_folders(&self) -> crate::jsonrpc::Result<Option<Vec<lsp::WorkspaceFolder>>> {
+        self.send_request_initialized::<lsp::request::WorkspaceFoldersRequest>(())
             .await
     }
 
@@ -198,8 +193,11 @@ impl Client {
     /// # Compatibility
     ///
     /// This request was introduced in specification version 3.6.0.
-    pub async fn configuration(&self, items: Vec<ConfigurationItem>) -> Result<Vec<Value>> {
-        self.send_request_initialized::<WorkspaceConfiguration>(ConfigurationParams { items })
+    pub async fn configuration(
+        &self,
+        items: Vec<lsp::ConfigurationItem>,
+    ) -> crate::jsonrpc::Result<Vec<serde_json::Value>> {
+        self.send_request_initialized::<lsp::request::WorkspaceConfiguration>(lsp::ConfigurationParams { items })
             .await
     }
 
@@ -218,14 +216,11 @@ impl Client {
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
     pub async fn apply_edit(
         &self,
-        edit: WorkspaceEdit,
+        edit: lsp::WorkspaceEdit,
         label: Option<String>,
-    ) -> Result<ApplyWorkspaceEditResponse> {
-        self.send_request_initialized::<ApplyWorkspaceEdit>(ApplyWorkspaceEditParams {
-            edit,
-            label,
-        })
-        .await
+    ) -> crate::jsonrpc::Result<lsp::ApplyWorkspaceEditResponse> {
+        self.send_request_initialized::<lsp::request::ApplyWorkspaceEdit>(lsp::ApplyWorkspaceEditParams { edit, label })
+            .await
     }
 
     /// Submits validation diagnostics for an open file with the given URI.
@@ -237,15 +232,10 @@ impl Client {
     /// # Initialization
     ///
     /// This notification will only be sent if the server is initialized.
-    pub async fn publish_diagnostics(
-        &self,
-        uri: Url,
-        diags: Vec<Diagnostic>,
-        version: Option<i32>,
-    ) {
-        self.send_notification_initialized::<PublishDiagnostics>(PublishDiagnosticsParams::new(
-            uri, diags, version,
-        ))
+    pub async fn publish_diagnostics(&self, uri: lsp::Url, diags: Vec<lsp::Diagnostic>, version: Option<i32>) {
+        self.send_notification_initialized::<lsp::notification::PublishDiagnostics>(
+            lsp::PublishDiagnosticsParams::new(uri, diags, version),
+        )
         .await;
     }
 
@@ -256,70 +246,70 @@ impl Client {
     /// This notification will only be sent if the server is initialized.
     pub async fn send_custom_notification<N>(&self, params: N::Params)
     where
-        N: Notification,
+        N: lsp::notification::Notification,
     {
         self.send_notification_initialized::<N>(params).await;
     }
 
     async fn send_notification<N>(&self, params: N::Params)
     where
-        N: Notification,
+        N: lsp::notification::Notification,
     {
-        let mut sender = self.inner.sender.clone();
-        let message = Outgoing::Request(ClientRequest::notification::<N>(params));
+        let sender = self.inner.sender.clone();
+        let message = crate::jsonrpc::Outgoing::Request(crate::jsonrpc::ClientRequest::notification::<N>(params));
         if sender.send(message).await.is_err() {
-            error!("failed to send notification")
+            log::error!("failed to send notification")
         }
     }
 
     async fn send_notification_initialized<N>(&self, params: N::Params)
     where
-        N: Notification,
+        N: lsp::notification::Notification,
     {
-        if let State::Initialized | State::ShutDown = self.inner.state.get() {
+        if let crate::server::StateKind::Initialized | crate::server::StateKind::ShutDown = self.inner.state.get() {
             self.send_notification::<N>(params).await;
         } else {
-            let msg = ClientRequest::notification::<N>(params);
-            trace!("server not initialized, supressing message: {}", msg);
+            let msg = crate::jsonrpc::ClientRequest::notification::<N>(params);
+            log::trace!("server not initialized, supressing message: {}", msg);
         }
     }
 
-    async fn send_request<R>(&self, params: R::Params) -> Result<R::Result>
+    async fn send_request<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
     where
-        R: Request,
+        R: lsp::request::Request,
     {
         let id = self.inner.request_id.fetch_add(1, Ordering::Relaxed);
-        let message = Outgoing::Request(ClientRequest::request::<R>(id, params));
+        let message = crate::jsonrpc::Outgoing::Request(crate::jsonrpc::ClientRequest::request::<R>(id, params));
 
-        let response_waiter = self.inner.pending_requests.wait(Id::Number(id));
+        let response_waiter = self.inner.pending_requests.wait(crate::jsonrpc::Id::Number(id));
 
         if self.inner.sender.clone().send(message).await.is_err() {
-            error!("failed to send request");
-            return Err(Error::internal_error());
+            log::error!("failed to send request");
+            return Err(crate::jsonrpc::Error::internal_error());
         }
 
         let response = response_waiter.await;
         let (_, result) = response.into_parts();
         result.and_then(|v| {
-            serde_json::from_value(v).map_err(|e| Error {
-                code: ErrorCode::ParseError,
+            serde_json::from_value(v).map_err(|e| crate::jsonrpc::Error {
+                code: crate::jsonrpc::ErrorCode::ParseError,
                 message: e.to_string(),
                 data: None,
             })
         })
     }
 
-    async fn send_request_initialized<R>(&self, params: R::Params) -> Result<R::Result>
+    async fn send_request_initialized<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
     where
-        R: Request,
+        R: lsp::request::Request,
     {
-        if let State::Initialized | State::ShutDown = self.inner.state.get() {
+        if let crate::server::StateKind::Initialized | crate::server::StateKind::ShutDown = self.inner.state.get() {
             self.send_request::<R>(params).await
         } else {
             let id = self.inner.request_id.load(Ordering::SeqCst) + 1;
-            let msg = ClientRequest::request::<R>(id, params);
-            trace!("server not initialized, supressing message: {}", msg);
-            Err(jsonrpc::not_initialized_error())
+            let msg = crate::jsonrpc::ClientRequest::request::<R>(id, params);
+            log::trace!("server not initialized, supressing message: {}", msg);
+            Err(crate::jsonrpc::not_initialized_error())
         }
     }
 }
@@ -331,90 +321,5 @@ impl Debug for Client {
             .field("pending_requests", &self.inner.pending_requests)
             .field("state", &self.inner.state)
             .finish()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::future::Future;
-
-    use futures::channel::mpsc;
-    use futures::StreamExt;
-    use serde_json::json;
-
-    use super::*;
-
-    async fn assert_client_messages<F, Fut>(f: F, expected: ClientRequest)
-    where
-        F: FnOnce(Client) -> Fut,
-        Fut: Future,
-    {
-        let (request_tx, request_rx) = mpsc::channel(1);
-        let pending = Arc::new(ClientRequests::new());
-        let state = Arc::new(ServerState::new());
-        state.set(State::Initialized);
-
-        let client = Client::new(request_tx, pending, state);
-        f(client).await;
-
-        let messages: Vec<_> = request_rx.collect().await;
-        assert_eq!(messages, vec![Outgoing::Request(expected)]);
-    }
-
-    #[tokio::test]
-    async fn log_message() {
-        let (typ, msg) = (MessageType::Log, "foo bar".to_owned());
-        let expected = ClientRequest::notification::<LogMessage>(LogMessageParams {
-            typ,
-            message: msg.clone(),
-        });
-
-        assert_client_messages(|p| async move { p.log_message(typ, msg).await }, expected).await;
-    }
-
-    #[tokio::test]
-    async fn show_message() {
-        let (typ, msg) = (MessageType::Log, "foo bar".to_owned());
-        let expected = ClientRequest::notification::<ShowMessage>(ShowMessageParams {
-            typ,
-            message: msg.clone(),
-        });
-
-        assert_client_messages(|p| async move { p.show_message(typ, msg).await }, expected).await;
-    }
-
-    #[tokio::test]
-    async fn telemetry_event() {
-        let null = json!(null);
-        let expected = ClientRequest::notification::<TelemetryEvent>(null.clone());
-        assert_client_messages(|p| async move { p.telemetry_event(null).await }, expected).await;
-
-        let array = json!([1, 2, 3]);
-        let expected = ClientRequest::notification::<TelemetryEvent>(array.clone());
-        assert_client_messages(|p| async move { p.telemetry_event(array).await }, expected).await;
-
-        let object = json!({});
-        let expected = ClientRequest::notification::<TelemetryEvent>(object.clone());
-        assert_client_messages(|p| async move { p.telemetry_event(object).await }, expected).await;
-
-        let other = json!("hello");
-        let wrapped = Value::Array(vec![other.clone()]);
-        let expected = ClientRequest::notification::<TelemetryEvent>(wrapped);
-        assert_client_messages(|p| async move { p.telemetry_event(other).await }, expected).await;
-    }
-
-    #[tokio::test]
-    async fn publish_diagnostics() {
-        let uri: Url = "file:///path/to/file".parse().unwrap();
-        let diagnostics = vec![Diagnostic::new_simple(Default::default(), "example".into())];
-
-        let params = PublishDiagnosticsParams::new(uri.clone(), diagnostics.clone(), None);
-        let expected = ClientRequest::notification::<PublishDiagnostics>(params);
-
-        assert_client_messages(
-            |p| async move { p.publish_diagnostics(uri, diagnostics, None).await },
-            expected,
-        )
-        .await;
     }
 }

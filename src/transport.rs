@@ -1,20 +1,32 @@
 //! `tower` server which multiplexes bidirectional traffic over one connection.
 
-use std::error::Error;
-use std::pin::Pin;
-use std::task::{Context, Poll};
+#[cfg(feature = "runtime-independent")]
+use async_codec_lite::{FramedRead, FramedWrite};
+#[cfg(feature = "runtime-independent")]
+use futures::io::{AsyncRead, AsyncWrite};
 
-use futures::channel::mpsc;
-use futures::future::{self, Either, FutureExt, TryFutureExt};
-use futures::sink::SinkExt;
-use futures::stream::{self, Empty, Stream, StreamExt};
-use log::error;
+#[cfg(not(feature = "runtime-independent"))]
 use tokio::io::{AsyncRead, AsyncWrite};
+#[cfg(not(feature = "runtime-independent"))]
 use tokio_util::codec::{FramedRead, FramedWrite};
-use tower_service::Service;
 
-use super::codec::LanguageServerCodec;
-use super::jsonrpc::{self, Incoming, Outgoing, Response};
+use super::{
+    codec::LanguageServerCodec,
+    jsonrpc::{self, Incoming, Outgoing, Response},
+};
+use futures::{
+    channel::mpsc,
+    future::{self, Either, FutureExt, TryFutureExt},
+    sink::SinkExt,
+    stream::{self, Empty, Stream, StreamExt},
+};
+use log::error;
+use std::{
+    error::Error,
+    pin::Pin,
+    task::{Context, Poll},
+};
+use tower_service::Service;
 
 /// Server for processing requests and responses on standard I/O or TCP.
 #[derive(Debug)]
@@ -113,7 +125,7 @@ where
                         let response_fut = future::ready(Some(Outgoing::Response(response)));
                         sender.send(Either::Right(response_fut)).await.unwrap();
                         continue;
-                    }
+                    },
                 };
 
                 if let Err(err) = future::poll_fn(|cx| service.poll_ready(cx)).await {
@@ -163,23 +175,24 @@ impl Stream for Nothing {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use futures::{future, future::Ready, stream};
+
+    #[cfg(feature = "runtime-independent")]
+    use futures::io::Cursor;
+    #[cfg(not(feature = "runtime-independent"))]
     use std::io::Cursor;
 
-    use futures::future::Ready;
-    use futures::{future, stream};
-
-    use super::*;
-
-    const REQUEST: &'static str = r#"{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}"#;
-    const RESPONSE: &'static str = r#"{"jsonrpc":"2.0","result":{"capabilities":{}},"id":1}"#;
+    const REQUEST: &str = r#"{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}"#;
+    const RESPONSE: &str = r#"{"jsonrpc":"2.0","result":{"capabilities":{}},"id":1}"#;
 
     #[derive(Debug)]
     struct MockService;
 
     impl Service<Incoming> for MockService {
-        type Response = Option<Outgoing>;
         type Error = String;
         type Future = Ready<Result<Self::Response, Self::Error>>;
+        type Response = Option<Outgoing>;
 
         fn poll_ready(&mut self, _: &mut Context) -> Poll<Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
@@ -206,9 +219,7 @@ mod tests {
     #[tokio::test]
     async fn serves_on_stdio() {
         let (mut stdin, mut stdout) = mock_stdio();
-        Server::new(&mut stdin, &mut stdout)
-            .serve(MockService)
-            .await;
+        Server::new(&mut stdin, &mut stdout).serve(MockService).await;
 
         assert_eq!(stdin.position(), 80);
         assert_eq!(stdout, mock_response());
@@ -236,9 +247,7 @@ mod tests {
         let message = format!("Content-Length: {}\r\n\r\n{}", invalid.len(), invalid).into_bytes();
         let (mut stdin, mut stdout) = (Cursor::new(message), Vec::new());
 
-        Server::new(&mut stdin, &mut stdout)
-            .serve(MockService)
-            .await;
+        Server::new(&mut stdin, &mut stdout).serve(MockService).await;
 
         assert_eq!(stdin.position(), 48);
         let err = r#"{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}"#;

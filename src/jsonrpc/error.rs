@@ -1,11 +1,8 @@
 //! Error types defined by the JSON-RPC specification.
 
-use std::fmt::{self, Display, Formatter};
-
-use serde::de::Deserializer;
-use serde::ser::Serializer;
-use serde::{Deserialize, Serialize};
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_json::Value;
+use std::fmt::{self, Display, Formatter};
 
 /// A list of numeric error codes used in JSON-RPC responses.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -22,7 +19,6 @@ pub enum ErrorCode {
     InternalError,
     /// Reserved for implementation-defined server errors.
     ServerError(i64),
-
     /// The request was cancelled by the client.
     ///
     /// # Compatibility
@@ -39,7 +35,6 @@ pub enum ErrorCode {
 
 impl ErrorCode {
     /// Returns the integer error code value.
-    #[inline]
     pub fn code(&self) -> i64 {
         match *self {
             ErrorCode::ParseError => -32700,
@@ -54,7 +49,6 @@ impl ErrorCode {
     }
 
     /// Returns a human-readable description of the error.
-    #[inline]
     pub fn description(&self) -> &'static str {
         match *self {
             ErrorCode::ParseError => "Parse error",
@@ -70,7 +64,6 @@ impl ErrorCode {
 }
 
 impl From<i64> for ErrorCode {
-    #[inline]
     fn from(code: i64) -> Self {
         match code {
             -32700 => ErrorCode::ParseError,
@@ -125,7 +118,6 @@ pub struct Error {
 
 impl Error {
     /// Creates a new error from the given `ErrorCode`.
-    #[inline]
     pub fn new(code: ErrorCode) -> Self {
         Error {
             code,
@@ -135,25 +127,21 @@ impl Error {
     }
 
     /// Creates a new parse error (`-32700`).
-    #[inline]
     pub fn parse_error() -> Self {
         Error::new(ErrorCode::ParseError)
     }
 
     /// Creates a new "invalid request" error (`-32600`).
-    #[inline]
     pub fn invalid_request() -> Self {
         Error::new(ErrorCode::InvalidRequest)
     }
 
     /// Creates a new "method not found" error (`-32601`).
-    #[inline]
     pub fn method_not_found() -> Self {
         Error::new(ErrorCode::MethodNotFound)
     }
 
     /// Creates a new "invalid params" error (`-32602`).
-    #[inline]
     pub fn invalid_params<M>(message: M) -> Self
     where
         M: Into<String>,
@@ -166,7 +154,6 @@ impl Error {
     }
 
     /// Creates a new internal error (`-32603`).
-    #[inline]
     pub fn internal_error() -> Self {
         Error::new(ErrorCode::InternalError)
     }
@@ -176,7 +163,6 @@ impl Error {
     /// # Compatibility
     ///
     /// This error code is defined by the Language Server Protocol.
-    #[inline]
     pub fn request_cancelled() -> Self {
         Error::new(ErrorCode::RequestCancelled)
     }
@@ -186,7 +172,6 @@ impl Error {
     /// # Compatibility
     ///
     /// This error code is defined by the Language Server Protocol.
-    #[inline]
     pub fn content_modified() -> Self {
         Error::new(ErrorCode::ContentModified)
     }
@@ -198,4 +183,5 @@ impl Display for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for Error {
+}

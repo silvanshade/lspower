@@ -1,62 +1,50 @@
-//! Encoder and decoder for Language Server Protocol messages.
-
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
-use std::io::{Error as IoError, Write};
-use std::marker::PhantomData;
-use std::str::{self, Utf8Error};
-
-use bytes::{Buf, BufMut, BytesMut};
-use log::trace;
-use nom::branch::alt;
-use nom::bytes::streaming::{is_not, tag};
-use nom::character::streaming::{char, crlf, digit1, space0};
-use nom::combinator::{map_res, opt};
-use nom::error::ErrorKind;
-use nom::multi::length_data;
-use nom::sequence::{delimited, terminated, tuple};
-use nom::{Err, IResult, Needed};
-use serde::{de::DeserializeOwned, Serialize};
+#[cfg(feature = "runtime-independent")]
+use async_codec_lite::{Decoder, Encoder};
+#[cfg(not(feature = "runtime-independent"))]
 use tokio_util::codec::{Decoder, Encoder};
 
+use bytes::{Buf, BufMut, BytesMut};
+use nom::{
+    branch::alt,
+    bytes::streaming::{is_not, tag},
+    character::streaming::{char, crlf, digit1, space0},
+    combinator::{map_res, opt},
+    multi::length_data,
+    sequence::{delimited, terminated, tuple},
+};
+use std::{
+    io::{self, Write},
+    marker::PhantomData,
+    str,
+};
+use thiserror::Error;
+
 /// Errors that can occur when processing an LSP request.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ParseError {
     /// Request lacks the required `Content-Length` header.
+    #[error("missing required `Content-Length` header")]
     MissingHeader,
     /// The length value in the `Content-Length` header is invalid.
+    #[error("unable to parse content length")]
     InvalidLength,
     /// The media type in the `Content-Type` header is invalid.
+    #[error("unable to parse content length")]
     InvalidType,
     /// Failed to parse the JSON body.
+    #[error("unable to parse JSON body: {0}")]
     Body(serde_json::Error),
     /// Failed to encode the response.
-    Encode(IoError),
+    #[error("failed to encode response: {0}")]
+    Encode(io::Error),
     /// Request contains invalid UTF8.
-    Utf8(Utf8Error),
+    #[error("request contains invalid UTF8: {0}")]
+    Utf8(str::Utf8Error),
 }
 
-impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match *self {
-            ParseError::MissingHeader => write!(f, "missing required `Content-Length` header"),
-            ParseError::InvalidLength => write!(f, "unable to parse content length"),
-            ParseError::InvalidType => write!(f, "unable to parse content type"),
-            ParseError::Body(ref e) => write!(f, "unable to parse JSON body: {}", e),
-            ParseError::Encode(ref e) => write!(f, "failed to encode response: {}", e),
-            ParseError::Utf8(ref e) => write!(f, "request contains invalid UTF8: {}", e),
-        }
-    }
-}
-
-impl Error for ParseError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match *self {
-            ParseError::Body(ref e) => Some(e),
-            ParseError::Encode(ref e) => Some(e),
-            ParseError::Utf8(ref e) => Some(e),
-            _ => None,
-        }
+impl From<io::Error> for ParseError {
+    fn from(error: io::Error) -> Self {
+        ParseError::Encode(error)
     }
 }
 
@@ -66,14 +54,8 @@ impl From<serde_json::Error> for ParseError {
     }
 }
 
-impl From<IoError> for ParseError {
-    fn from(error: IoError) -> Self {
-        ParseError::Encode(error)
-    }
-}
-
-impl From<Utf8Error> for ParseError {
-    fn from(error: Utf8Error) -> Self {
+impl From<str::Utf8Error> for ParseError {
+    fn from(error: str::Utf8Error) -> Self {
         ParseError::Utf8(error)
     }
 }
@@ -94,12 +76,33 @@ impl<T> Default for LanguageServerCodec<T> {
     }
 }
 
-impl<T: Serialize> Encoder<T> for LanguageServerCodec<T> {
+#[cfg(feature = "runtime-independent")]
+impl<T: serde::Serialize> Encoder for LanguageServerCodec<T> {
+    type Error = ParseError;
+    type Item = T;
+
+    fn encode(&mut self, item: Self::Item, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let msg = serde_json::to_string(&item)?;
+        log::trace!("-> {}", msg);
+
+        // Reserve just enough space to hold the `Content-Length: ` and `\r\n\r\n` constants,
+        // the length of the message, and the message body.
+        dst.reserve(msg.len() + number_of_digits(msg.len()) + 20);
+        let mut writer = dst.writer();
+        write!(writer, "Content-Length: {}\r\n\r\n{}", msg.len(), msg)?;
+        writer.flush()?;
+
+        Ok(())
+    }
+}
+
+#[cfg(not(feature = "runtime-independent"))]
+impl<T: serde::Serialize> Encoder<T> for LanguageServerCodec<T> {
     type Error = ParseError;
 
     fn encode(&mut self, item: T, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let msg = serde_json::to_string(&item)?;
-        trace!("-> {}", msg);
+        log::trace!("-> {}", msg);
 
         // Reserve just enough space to hold the `Content-Length: ` and `\r\n\r\n` constants,
         // the length of the message, and the message body.
@@ -124,33 +127,35 @@ fn number_of_digits(mut n: usize) -> usize {
     num_digits
 }
 
-impl<T: DeserializeOwned> Decoder for LanguageServerCodec<T> {
-    type Item = T;
+impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
     type Error = ParseError;
+    type Item = T;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        use nom::error::Error;
-
         if self.remaining_msg_bytes > src.len() {
             return Ok(None);
         }
 
         let (msg, len) = match parse_message(src) {
             Ok((remaining, msg)) => (str::from_utf8(msg), src.len() - remaining.len()),
-            Err(Err::Incomplete(Needed::Size(min))) => {
+            Err(nom::Err::Incomplete(nom::Needed::Size(min))) => {
                 self.remaining_msg_bytes = min.get();
                 return Ok(None);
-            }
-            Err(Err::Incomplete(_)) => {
+            },
+            Err(nom::Err::Incomplete(_)) => {
                 return Ok(None);
-            }
-            Err(Err::Error(Error { code, .. })) | Err(Err::Failure(Error { code, .. })) => loop {
+            },
+            #[rustfmt::skip]
+            | Err(nom::Err::Error  (nom::error::Error { code, .. }))
+            | Err(nom::Err::Failure(nom::error::Error { code, .. })) => loop {
                 use ParseError::*;
                 match parse_message(src) {
                     Err(_) if !src.is_empty() => src.advance(1),
                     _ => match code {
-                        ErrorKind::Digit | ErrorKind::MapRes => return Err(InvalidLength),
-                        ErrorKind::Char | ErrorKind::IsNot => return Err(InvalidType),
+                        nom::error::ErrorKind::Digit => return Err(InvalidLength),
+                        nom::error::ErrorKind::MapRes => return Err(InvalidLength),
+                        nom::error::ErrorKind::Char => return Err(InvalidType),
+                        nom::error::ErrorKind::IsNot => return Err(InvalidType),
                         _ => return Err(MissingHeader),
                     },
                 }
@@ -160,12 +165,12 @@ impl<T: DeserializeOwned> Decoder for LanguageServerCodec<T> {
         let result = match msg {
             Err(err) => Err(err.into()),
             Ok(msg) => {
-                trace!("<- {}", msg);
+                log::trace!("<- {}", msg);
                 match serde_json::from_str(msg) {
                     Ok(parsed) => Ok(Some(parsed)),
                     Err(err) => Err(err.into()),
                 }
-            }
+            },
         };
 
         src.advance(len);
@@ -175,7 +180,7 @@ impl<T: DeserializeOwned> Decoder for LanguageServerCodec<T> {
     }
 }
 
-fn parse_message(input: &[u8]) -> IResult<&[u8], &[u8]> {
+fn parse_message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
     let content_len = delimited(tag("Content-Length: "), digit1, crlf);
 
     let utf8 = alt((tag("utf-8"), tag("utf8")));
@@ -238,7 +243,7 @@ mod tests {
         let mut buffer = BytesMut::from(mixed.as_str());
 
         match codec.decode(&mut buffer) {
-            Err(ParseError::MissingHeader) => {}
+            Err(ParseError::MissingHeader) => {},
             other => panic!("expected `Err(ParseError::MissingHeader)`, got {:?}", other),
         }
 

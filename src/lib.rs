@@ -6,7 +6,7 @@
 //!
 //! ```rust
 //! use lspower::jsonrpc::Result;
-//! use lspower::lsp_types::*;
+//! use lspower::lsp::*;
 //! use lspower::{Client, LanguageServer, LspService, Server};
 //!
 //! #[derive(Debug)]
@@ -68,36 +68,23 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 
-pub extern crate lsp_types;
-
-pub use self::client::Client;
-pub use self::service::{ExitedError, LspService, MessageStream};
-pub use self::transport::Server;
-
-/// A re-export of [`async-trait`](https://docs.rs/async-trait) for convenience.
-pub use async_trait::async_trait;
-
-use std::fmt::{self, Debug, Formatter};
-use std::sync::atomic::{AtomicUsize, Ordering};
-
-use auto_impl::auto_impl;
-use log::{error, warn};
-use lsp_types::request::{
-    GotoDeclarationParams, GotoDeclarationResponse, GotoImplementationParams,
-    GotoImplementationResponse, GotoTypeDefinitionParams, GotoTypeDefinitionResponse,
-};
-use lsp_types::*;
-use lspower_macros::rpc;
-use serde_json::Value;
-
-use self::jsonrpc::{Error, Result};
-
-pub mod jsonrpc;
+pub extern crate lsp;
 
 mod client;
 mod codec;
+pub mod jsonrpc;
+mod server;
 mod service;
 mod transport;
+
+pub use self::{
+    client::Client,
+    service::{ExitedError, LspService, MessageStream},
+    transport::Server,
+};
+pub use async_trait::async_trait;
+use auto_impl::auto_impl;
+use lspower_macros::rpc;
 
 /// Trait implemented by language server backends.
 ///
@@ -116,7 +103,7 @@ pub trait LanguageServer: Send + Sync + 'static {
     /// This method is guaranteed to only execute once. If the client sends this request to the
     /// server again, the server will respond with JSON-RPC error code `-32600` (invalid request).
     #[rpc(name = "initialize")]
-    async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult>;
+    async fn initialize(&self, params: lsp::InitializeParams) -> crate::jsonrpc::Result<lsp::InitializeResult>;
 
     /// The [`initialized`] notification is sent from the client to the server after the client
     /// received the result of the initialize request but before the client sends anything else.
@@ -126,7 +113,7 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`initialized`]: https://microsoft.github.io/language-server-protocol/specification#initialized
     #[rpc(name = "initialized")]
-    async fn initialized(&self, params: InitializedParams) {
+    async fn initialized(&self, params: lsp::InitializedParams) {
         let _ = params;
     }
 
@@ -141,7 +128,7 @@ pub trait LanguageServer: Send + Sync + 'static {
     /// This method is guaranteed to only execute once. If the client sends this request to the
     /// server again, the server will respond with JSON-RPC error code `-32600` (invalid request).
     #[rpc(name = "shutdown")]
-    async fn shutdown(&self) -> Result<()>;
+    async fn shutdown(&self) -> crate::jsonrpc::Result<()>;
 
     /// The [`workspace/didChangeWorkspaceFolders`] notification is sent from the client to the
     /// server to inform about workspace folder configuration changes.
@@ -158,9 +145,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     /// [`workspace/didChangeWorkspaceFolders`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWorkspaceFolders
     /// [`initialize`]: #tymethod.initialize
     #[rpc(name = "workspace/didChangeWorkspaceFolders")]
-    async fn did_change_workspace_folders(&self, params: DidChangeWorkspaceFoldersParams) {
+    async fn did_change_workspace_folders(&self, params: lsp::DidChangeWorkspaceFoldersParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeWorkspaceFolders notification, but it is not implemented");
+        log::warn!("Got a workspace/didChangeWorkspaceFolders notification, but it is not implemented");
     }
 
     /// The [`workspace/didChangeConfiguration`] notification is sent from the client to the server
@@ -168,9 +155,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`workspace/didChangeConfiguration`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration
     #[rpc(name = "workspace/didChangeConfiguration")]
-    async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
+    async fn did_change_configuration(&self, params: lsp::DidChangeConfigurationParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeConfiguration notification, but it is not implemented");
+        log::warn!("Got a workspace/didChangeConfiguration notification, but it is not implemented");
     }
 
     /// The [`workspace/didChangeWatchedFiles`] notification is sent from the client to the server
@@ -183,9 +170,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     /// [`workspace/didChangeWatchedFiles`]: https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration
     /// [`initialized`]: #tymethod.initialized
     #[rpc(name = "workspace/didChangeWatchedFiles")]
-    async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
+    async fn did_change_watched_files(&self, params: lsp::DidChangeWatchedFilesParams) {
         let _ = params;
-        warn!("Got a workspace/didChangeWatchedFiles notification, but it is not implemented");
+        log::warn!("Got a workspace/didChangeWatchedFiles notification, but it is not implemented");
     }
 
     /// The [`workspace/symbol`] request is sent from the client to the server to list project-wide
@@ -195,11 +182,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "workspace/symbol")]
     async fn symbol(
         &self,
-        params: WorkspaceSymbolParams,
-    ) -> Result<Option<Vec<SymbolInformation>>> {
+        params: lsp::WorkspaceSymbolParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::SymbolInformation>>> {
         let _ = params;
-        error!("Got a workspace/symbol request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a workspace/symbol request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`workspace/executeCommand`] request is sent from the client to the server to trigger
@@ -210,10 +197,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`workspace/executeCommand`]: https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand
     #[rpc(name = "workspace/executeCommand")]
-    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<Value>> {
+    async fn execute_command(
+        &self,
+        params: lsp::ExecuteCommandParams,
+    ) -> crate::jsonrpc::Result<Option<serde_json::Value>> {
         let _ = params;
-        error!("Got a workspace/executeCommand request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a workspace/executeCommand request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/didOpen`] notification is sent from the client to the server to signal
@@ -225,9 +215,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/didOpen`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_didOpen
     #[rpc(name = "textDocument/didOpen")]
-    async fn did_open(&self, params: DidOpenTextDocumentParams) {
+    async fn did_open(&self, params: lsp::DidOpenTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didOpen notification, but it is not implemented");
+        log::warn!("Got a textDocument/didOpen notification, but it is not implemented");
     }
 
     /// The [`textDocument/didChange`] notification is sent from the client to the server to signal
@@ -238,9 +228,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/didChange`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_didChange
     #[rpc(name = "textDocument/didChange")]
-    async fn did_change(&self, params: DidChangeTextDocumentParams) {
+    async fn did_change(&self, params: lsp::DidChangeTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didChange notification, but it is not implemented");
+        log::warn!("Got a textDocument/didChange notification, but it is not implemented");
     }
 
     /// The [`textDocument/willSave`] notification is sent from the client to the server before the
@@ -248,9 +238,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/willSave`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_willSave
     #[rpc(name = "textDocument/willSave")]
-    async fn will_save(&self, params: WillSaveTextDocumentParams) {
+    async fn will_save(&self, params: lsp::WillSaveTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/willSave notification, but it is not implemented");
+        log::warn!("Got a textDocument/willSave notification, but it is not implemented");
     }
 
     /// The [`textDocument/willSaveWaitUntil`] request is sent from the client to the server before
@@ -264,11 +254,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/willSaveWaitUntil")]
     async fn will_save_wait_until(
         &self,
-        params: WillSaveTextDocumentParams,
-    ) -> Result<Option<Vec<TextEdit>>> {
+        params: lsp::WillSaveTextDocumentParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/willSaveWaitUntil request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/willSaveWaitUntil request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/didSave`] notification is sent from the client to the server when the
@@ -276,9 +266,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/didSave`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_didSave
     #[rpc(name = "textDocument/didSave")]
-    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+    async fn did_save(&self, params: lsp::DidSaveTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didSave notification, but it is not implemented");
+        log::warn!("Got a textDocument/didSave notification, but it is not implemented");
     }
 
     /// The [`textDocument/didClose`] notification is sent from the client to the server when the
@@ -289,9 +279,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/didClose`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_didClose
     #[rpc(name = "textDocument/didClose")]
-    async fn did_close(&self, params: DidCloseTextDocumentParams) {
+    async fn did_close(&self, params: lsp::DidCloseTextDocumentParams) {
         let _ = params;
-        warn!("Got a textDocument/didClose notification, but it is not implemented");
+        log::warn!("Got a textDocument/didClose notification, but it is not implemented");
     }
 
     /// The [`textDocument/completion`] request is sent from the client to the server to compute
@@ -303,10 +293,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/completion`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
     #[rpc(name = "textDocument/completion")]
-    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+    async fn completion(
+        &self,
+        params: lsp::CompletionParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::CompletionResponse>> {
         let _ = params;
-        error!("Got a textDocument/completion request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/completion request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`completionItem/resolve`] request is sent from the client to the server to resolve
@@ -314,10 +307,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`completionItem/resolve`]: https://microsoft.github.io/language-server-protocol/specification#completionItem_resolve
     #[rpc(name = "completionItem/resolve")]
-    async fn completion_resolve(&self, params: CompletionItem) -> Result<CompletionItem> {
+    async fn completion_resolve(&self, params: lsp::CompletionItem) -> crate::jsonrpc::Result<lsp::CompletionItem> {
         let _ = params;
-        error!("Got a completionItem/resolve request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a completionItem/resolve request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/hover`] request asks the server for hover information at a given text
@@ -328,10 +321,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/hover`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
     #[rpc(name = "textDocument/hover")]
-    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+    async fn hover(&self, params: lsp::HoverParams) -> crate::jsonrpc::Result<Option<lsp::Hover>> {
         let _ = params;
-        error!("Got a textDocument/hover request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/hover request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/signatureHelp`] request is sent from the client to the server to request
@@ -339,10 +332,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/signatureHelp`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_signatureHelp
     #[rpc(name = "textDocument/signatureHelp")]
-    async fn signature_help(&self, params: SignatureHelpParams) -> Result<Option<SignatureHelp>> {
+    async fn signature_help(
+        &self,
+        params: lsp::SignatureHelpParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::SignatureHelp>> {
         let _ = params;
-        error!("Got a textDocument/signatureHelp request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/signatureHelp request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/declaration`] request asks the server for the declaration location of a
@@ -367,11 +363,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/declaration")]
     async fn goto_declaration(
         &self,
-        params: GotoDeclarationParams,
-    ) -> Result<Option<GotoDeclarationResponse>> {
+        params: lsp::request::GotoDeclarationParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::request::GotoDeclarationResponse>> {
         let _ = params;
-        error!("Got a textDocument/declaration request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/declaration request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/definition`] request asks the server for the definition location of a
@@ -394,15 +390,15 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/definition")]
     async fn goto_definition(
         &self,
-        params: GotoDefinitionParams,
-    ) -> Result<Option<GotoDefinitionResponse>> {
+        params: lsp::GotoDefinitionParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::GotoDefinitionResponse>> {
         let _ = params;
-        error!("Got a textDocument/definition request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/definition request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
-    /// The [`textDocument/typeDefinition`] request asks the server for the type definition location of
-    /// a symbol at a given text document position.
+    /// The [`textDocument/typeDefinition`] request asks the server for the type definition location
+    /// of a symbol at a given text document position.
     ///
     /// [`textDocument/typeDefinition`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_typeDefinition
     ///
@@ -423,11 +419,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/typeDefinition")]
     async fn goto_type_definition(
         &self,
-        params: GotoTypeDefinitionParams,
-    ) -> Result<Option<GotoTypeDefinitionResponse>> {
+        params: lsp::request::GotoTypeDefinitionParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::request::GotoTypeDefinitionResponse>> {
         let _ = params;
-        error!("Got a textDocument/typeDefinition request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/typeDefinition request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/implementation`] request is sent from the client to the server to resolve
@@ -452,11 +448,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/implementation")]
     async fn goto_implementation(
         &self,
-        params: GotoImplementationParams,
-    ) -> Result<Option<GotoImplementationResponse>> {
+        params: lsp::request::GotoImplementationParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::request::GotoImplementationResponse>> {
         let _ = params;
-        error!("Got a textDocument/implementation request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/implementation request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/references`] request is sent from the client to the server to resolve
@@ -464,10 +460,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/references`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_references
     #[rpc(name = "textDocument/references")]
-    async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
+    async fn references(&self, params: lsp::ReferenceParams) -> crate::jsonrpc::Result<Option<Vec<lsp::Location>>> {
         let _ = params;
-        error!("Got a textDocument/references request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/references request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/documentHighlight`] request is sent from the client to the server to
@@ -483,11 +479,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/documentHighlight")]
     async fn document_highlight(
         &self,
-        params: DocumentHighlightParams,
-    ) -> Result<Option<Vec<DocumentHighlight>>> {
+        params: lsp::DocumentHighlightParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::DocumentHighlight>>> {
         let _ = params;
-        error!("Got a textDocument/documentHighlight request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/documentHighlight request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/documentSymbol`] request is sent from the client to the server to
@@ -495,9 +491,9 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// The returned result is either:
     ///
-    /// * [`DocumentSymbolResponse::Flat`] which is a flat list of all symbols found in a given
-    ///   text document. Then neither the symbol’s location range nor the symbol’s container name
-    ///   should be used to infer a hierarchy.
+    /// * [`DocumentSymbolResponse::Flat`] which is a flat list of all symbols found in a given text
+    ///   document. Then neither the symbol’s location range nor the symbol’s container name should
+    ///   be used to infer a hierarchy.
     /// * [`DocumentSymbolResponse::Nested`] which is a hierarchy of symbols found in a given text
     ///   document.
     ///
@@ -507,11 +503,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/documentSymbol")]
     async fn document_symbol(
         &self,
-        params: DocumentSymbolParams,
-    ) -> Result<Option<DocumentSymbolResponse>> {
+        params: lsp::DocumentSymbolParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::DocumentSymbolResponse>> {
         let _ = params;
-        error!("Got a textDocument/documentSymbol request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/documentSymbol request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/codeAction`] request is sent from the client to the server to compute
@@ -533,11 +529,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// Since version 3.8.0: support for `CodeAction` literals to enable the following scenarios:
     ///
-    /// * The ability to directly return a workspace edit from the code action request.
-    ///   This avoids having another server roundtrip to execute an actual code action.
-    ///   However server providers should be aware that if the code action is expensive to compute
-    ///   or the edits are huge it might still be beneficial if the result is simply a command and
-    ///   the actual edit is only computed when needed.
+    /// * The ability to directly return a workspace edit from the code action request. This avoids
+    ///   having another server roundtrip to execute an actual code action. However server providers
+    ///   should be aware that if the code action is expensive to compute or the edits are huge it
+    ///   might still be beneficial if the result is simply a command and the actual edit is only
+    ///   computed when needed.
     ///
     /// * The ability to group code actions using a kind. Clients are allowed to ignore that
     ///   information. However it allows them to better group code action for example into
@@ -546,10 +542,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     /// [`textDocument/codeAction`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
     /// [`workspace/executeCommand`]: https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand
     #[rpc(name = "textDocument/codeAction")]
-    async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
+    async fn code_action(
+        &self,
+        params: lsp::CodeActionParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::CodeActionResponse>> {
         let _ = params;
-        error!("Got a textDocument/codeAction request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/codeAction request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/codeLens`] request is sent from the client to the server to compute code
@@ -557,10 +556,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/codeLens`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_codeLens
     #[rpc(name = "textDocument/codeLens")]
-    async fn code_lens(&self, params: CodeLensParams) -> Result<Option<Vec<CodeLens>>> {
+    async fn code_lens(&self, params: lsp::CodeLensParams) -> crate::jsonrpc::Result<Option<Vec<lsp::CodeLens>>> {
         let _ = params;
-        error!("Got a textDocument/codeLens request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/codeLens request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`codeLens/resolve`] request is sent from the client to the server to resolve the
@@ -568,10 +567,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`codeLens/resolve`]: https://microsoft.github.io/language-server-protocol/specification#codeLens_resolve
     #[rpc(name = "codeLens/resolve")]
-    async fn code_lens_resolve(&self, params: CodeLens) -> Result<CodeLens> {
+    async fn code_lens_resolve(&self, params: lsp::CodeLens) -> crate::jsonrpc::Result<lsp::CodeLens> {
         let _ = params;
-        error!("Got a codeLens/resolve request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a codeLens/resolve request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/documentLink`] request is sent from the client to the server to request
@@ -594,10 +593,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`initialize`]: #tymethod.initialize
     #[rpc(name = "textDocument/documentLink")]
-    async fn document_link(&self, params: DocumentLinkParams) -> Result<Option<Vec<DocumentLink>>> {
+    async fn document_link(
+        &self,
+        params: lsp::DocumentLinkParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::DocumentLink>>> {
         let _ = params;
-        error!("Got a textDocument/documentLink request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/documentLink request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`documentLink/resolve`] request is sent from the client to the server to resolve the
@@ -608,10 +610,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`documentLink/resolve`]: https://microsoft.github.io/language-server-protocol/specification#documentLink_resolve
     #[rpc(name = "documentLink/resolve")]
-    async fn document_link_resolve(&self, params: DocumentLink) -> Result<DocumentLink> {
+    async fn document_link_resolve(&self, params: lsp::DocumentLink) -> crate::jsonrpc::Result<lsp::DocumentLink> {
         let _ = params;
-        error!("Got a documentLink/resolve request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a documentLink/resolve request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/documentColor`] request is sent from the client to the server to list
@@ -629,10 +631,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// This request was introduced in specification version 3.6.0.
     #[rpc(name = "textDocument/documentColor")]
-    async fn document_color(&self, params: DocumentColorParams) -> Result<Vec<ColorInformation>> {
+    async fn document_color(
+        &self,
+        params: lsp::DocumentColorParams,
+    ) -> crate::jsonrpc::Result<Vec<lsp::ColorInformation>> {
         let _ = params;
-        error!("Got a textDocument/documentColor request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/documentColor request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/colorPresentation`] request is sent from the client to the server to
@@ -654,11 +659,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/colorPresentation")]
     async fn color_presentation(
         &self,
-        params: ColorPresentationParams,
-    ) -> Result<Vec<ColorPresentation>> {
+        params: lsp::ColorPresentationParams,
+    ) -> crate::jsonrpc::Result<Vec<lsp::ColorPresentation>> {
         let _ = params;
-        error!("Got a textDocument/colorPresentation request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/colorPresentation request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/formatting`] request is sent from the client to the server to format a
@@ -666,10 +671,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/formatting`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_formatting
     #[rpc(name = "textDocument/formatting")]
-    async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+    async fn formatting(
+        &self,
+        params: lsp::DocumentFormattingParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/formatting request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/formatting request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/rangeFormatting`] request is sent from the client to the server to
@@ -679,11 +687,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/rangeFormatting")]
     async fn range_formatting(
         &self,
-        params: DocumentRangeFormattingParams,
-    ) -> Result<Option<Vec<TextEdit>>> {
+        params: lsp::DocumentRangeFormattingParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/rangeFormatting request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/rangeFormatting request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/onTypeFormatting`] request is sent from the client to the server to
@@ -693,11 +701,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/onTypeFormatting")]
     async fn on_type_formatting(
         &self,
-        params: DocumentOnTypeFormattingParams,
-    ) -> Result<Option<Vec<TextEdit>>> {
+        params: lsp::DocumentOnTypeFormattingParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::TextEdit>>> {
         let _ = params;
-        error!("Got a textDocument/onTypeFormatting request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/onTypeFormatting request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/rename`] request is sent from the client to the server to ask the server
@@ -706,10 +714,10 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// [`textDocument/rename`]: https://microsoft.github.io/language-server-protocol/specification#textDocument_rename
     #[rpc(name = "textDocument/rename")]
-    async fn rename(&self, params: RenameParams) -> Result<Option<WorkspaceEdit>> {
+    async fn rename(&self, params: lsp::RenameParams) -> crate::jsonrpc::Result<Option<lsp::WorkspaceEdit>> {
         let _ = params;
-        error!("Got a textDocument/rename request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/rename request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/prepareRename`] request is sent from the client to the server to setup
@@ -723,11 +731,11 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/prepareRename")]
     async fn prepare_rename(
         &self,
-        params: TextDocumentPositionParams,
-    ) -> Result<Option<PrepareRenameResponse>> {
+        params: lsp::TextDocumentPositionParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::PrepareRenameResponse>> {
         let _ = params;
-        error!("Got a textDocument/prepareRename request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/prepareRename request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/foldingRange`] request is sent from the client to the server to return
@@ -739,10 +747,13 @@ pub trait LanguageServer: Send + Sync + 'static {
     ///
     /// This request was introduced in specification version 3.10.0.
     #[rpc(name = "textDocument/foldingRange")]
-    async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
+    async fn folding_range(
+        &self,
+        params: lsp::FoldingRangeParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::FoldingRange>>> {
         let _ = params;
-        error!("Got a textDocument/foldingRange request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/foldingRange request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// The [`textDocument/selectionRange`] request is sent from the client to the server to return
@@ -760,154 +771,105 @@ pub trait LanguageServer: Send + Sync + 'static {
     #[rpc(name = "textDocument/selectionRange")]
     async fn selection_range(
         &self,
-        params: SelectionRangeParams,
-    ) -> Result<Option<Vec<SelectionRange>>> {
+        params: lsp::SelectionRangeParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::SelectionRange>>> {
         let _ = params;
-        error!("Got a textDocument/selectionRange request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/selectionRange request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`callHierarchy/incomingCalls`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#callHierarchy_incomingCalls
     #[rpc(name = "callHierarchy/incomingCalls")]
     async fn incoming_calls(
         &self,
-        params: CallHierarchyIncomingCallsParams,
-    ) -> Result<Option<Vec<CallHierarchyIncomingCall>>> {
+        params: lsp::CallHierarchyIncomingCallsParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::CallHierarchyIncomingCall>>> {
         let _ = params;
-        error!("Got a callHierarchy/incomingCalls request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a callHierarchy/incomingCalls request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`callHierarchy/outgoingCalls`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#callHierarchy_outgoingCalls
     #[rpc(name = "callHierarchy/outgoingCalls")]
     async fn outgoing_calls(
         &self,
-        params: CallHierarchyOutgoingCallsParams,
-    ) -> Result<Option<Vec<CallHierarchyOutgoingCall>>> {
+        params: lsp::CallHierarchyOutgoingCallsParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::CallHierarchyOutgoingCall>>> {
         let _ = params;
-        error!("Got a callHierarchy/outgoingCalls request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a callHierarchy/outgoingCalls request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`textDocument/prepareCallHierarchy`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_prepareCallHierarchy
     #[rpc(name = "textDocument/prepareCallHierarchy")]
     async fn prepare_call_hierarchy(
         &self,
-        params: CallHierarchyPrepareParams,
-    ) -> Result<Option<Vec<CallHierarchyItem>>> {
+        params: lsp::CallHierarchyPrepareParams,
+    ) -> crate::jsonrpc::Result<Option<Vec<lsp::CallHierarchyItem>>> {
         let _ = params;
-        error!("Got a textDocument/prepareCallHierarchy request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/prepareCallHierarchy request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`textDocument/semanticTokens/full`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
     #[rpc(name = "textDocument/semanticTokens/full")]
     async fn semantic_tokens_full(
         &self,
-        params: SemanticTokensParams,
-    ) -> Result<Option<SemanticTokensResult>> {
+        params: lsp::SemanticTokensParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::SemanticTokensResult>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/full request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/semanticTokens/full request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`textDocument/semanticTokens/full/delta`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
     #[rpc(name = "textDocument/semanticTokens/full/delta")]
     async fn semantic_tokens_full_delta(
         &self,
-        params: SemanticTokensDeltaParams,
-    ) -> Result<Option<SemanticTokensFullDeltaResult>> {
+        params: lsp::SemanticTokensDeltaParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::SemanticTokensFullDeltaResult>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/full/delta request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/semanticTokens/full/delta request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`textDocument/semanticTokens/range`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
     #[rpc(name = "textDocument/semanticTokens/range")]
     async fn semantic_tokens_range(
         &self,
-        params: SemanticTokensRangeParams,
-    ) -> Result<Option<SemanticTokensRangeResult>> {
+        params: lsp::SemanticTokensRangeParams,
+    ) -> crate::jsonrpc::Result<Option<lsp::SemanticTokensRangeResult>> {
         let _ = params;
-        error!("Got a textDocument/semanticTokens/range request, but it is not implemented");
-        Err(Error::method_not_found())
+        log::error!("Got a textDocument/semanticTokens/range request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`workspace/semanticTokens/full`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens
     #[rpc(name = "workspace/semanticTokens/refresh")]
-    async fn semantic_tokens_refresh(&self) -> Result<()> {
-        error!("Got a workspace/semanticTokens/refresh request, but it is not implemented");
-        Err(Error::method_not_found())
+    async fn semantic_tokens_refresh(&self) -> crate::jsonrpc::Result<()> {
+        log::error!("Got a workspace/semanticTokens/refresh request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// [`codeAction/resolve`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#codeAction_resolve
     #[rpc(name = "codeAction/resolve")]
-    async fn code_action_resolve(&self) -> Result<()> {
-        error!("Got a codeAction/resolve request, but it is not implemented");
-        Err(Error::method_not_found())
+    async fn code_action_resolve(&self) -> crate::jsonrpc::Result<()> {
+        log::error!("Got a codeAction/resolve request, but it is not implemented");
+        Err(crate::jsonrpc::Error::method_not_found())
     }
 
     /// This handler can be used to respond to all requests that are not handled by built in request
     /// handlers.
-    async fn request_else(&self, method: &str, params: Option<Value>) -> Result<Option<Value>> {
+    async fn request_else(
+        &self,
+        method: &str,
+        params: Option<serde_json::Value>,
+    ) -> crate::jsonrpc::Result<Option<serde_json::Value>> {
         let _ = params;
-        error!(
+        log::error!(
             "Got a {} request, but LanguageServer::request_else is not implemented",
             method
         );
-        Err(Error::method_not_found())
+        Err(crate::jsonrpc::Error::method_not_found())
     }
-}
-
-fn _assert_object_safe() {
-    fn assert_impl<T: LanguageServer>() {}
-    assert_impl::<Box<dyn LanguageServer>>();
-}
-
-/// Atomic value which represents the current state of the server.
-struct ServerState(AtomicUsize);
-
-impl ServerState {
-    #[inline]
-    const fn new() -> Self {
-        ServerState(AtomicUsize::new(State::Uninitialized as usize))
-    }
-
-    #[inline]
-    fn set(&self, state: State) {
-        self.0.store(state as usize, Ordering::SeqCst);
-    }
-
-    #[inline]
-    fn get(&self) -> State {
-        match self.0.load(Ordering::SeqCst) {
-            0 => State::Uninitialized,
-            1 => State::Initializing,
-            2 => State::Initialized,
-            3 => State::ShutDown,
-            4 => State::Exited,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl Debug for ServerState {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        self.get().fmt(f)
-    }
-}
-
-/// A list of possible states the language server can be in.
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum State {
-    /// Server has not received an `initialize` request.
-    Uninitialized = 0,
-    /// Server received an `initialize` request, but has not yet responded.
-    Initializing = 1,
-    /// Server received and responded success to an `initialize` request.
-    Initialized = 2,
-    /// Server received a `shutdown` request.
-    ShutDown = 3,
-    /// Server received an `exit` notification.
-    Exited = 4,
 }

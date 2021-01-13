@@ -40,7 +40,7 @@ consists of three parts:
 
 ```rust
 use lspower::jsonrpc::Result;
-use lspower::lsp_types::*;
+use lspower::lsp::*;
 use lspower::{Client, LanguageServer, LspService, Server};
 
 #[derive(Debug)]
