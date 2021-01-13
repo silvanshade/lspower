@@ -188,29 +188,12 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Error types defined by the JSON-RPC specification.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>, <span class="ident">Formatter</span>};
-
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">de</span>::<span class="ident">Deserializer</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">ser</span>::<span class="ident">Serializer</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>::<span class="ident">Deserializer</span>, <span class="ident">ser</span>::<span class="ident">Serializer</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">Value</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>, <span class="ident">Formatter</span>};
 
 <span class="doccomment">/// A list of numeric error codes used in JSON-RPC responses.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
@@ -227,7 +210,6 @@
     <span class="ident">InternalError</span>,
     <span class="doccomment">/// Reserved for implementation-defined server errors.</span>
     <span class="ident">ServerError</span>(<span class="ident">i64</span>),
-
     <span class="doccomment">/// The request was cancelled by the client.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Compatibility</span>
@@ -244,7 +226,6 @@
 
 <span class="kw">impl</span> <span class="ident">ErrorCode</span> {
     <span class="doccomment">/// Returns the integer error code value.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">ErrorCode</span>::<span class="ident">ParseError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32700</span>,
@@ -259,7 +240,6 @@
     }
 
     <span class="doccomment">/// Returns a human-readable description of the error.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">ErrorCode</span>::<span class="ident">ParseError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Parse error&quot;</span>,
@@ -275,7 +255,6 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">code</span> {
             <span class="op">-</span><span class="number">32700</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode</span>::<span class="ident">ParseError</span>,
@@ -330,7 +309,6 @@
 
 <span class="kw">impl</span> <span class="ident">Error</span> {
     <span class="doccomment">/// Creates a new error from the given `ErrorCode`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">code</span>: <span class="ident">ErrorCode</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span> {
             <span class="ident">code</span>,
@@ -340,25 +318,21 @@
     }
 
     <span class="doccomment">/// Creates a new parse error (`-32700`).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">ParseError</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;invalid request&quot; error (`-32600`).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_request</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">InvalidRequest</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;method not found&quot; error (`-32601`).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">method_not_found</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">MethodNotFound</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;invalid params&quot; error (`-32602`).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_params</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="ident">M</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">M</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -371,7 +345,6 @@
     }
 
     <span class="doccomment">/// Creates a new internal error (`-32603`).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal_error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">InternalError</span>)
     }
@@ -381,7 +354,6 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This error code is defined by the Language Server Protocol.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_cancelled</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">RequestCancelled</span>)
     }
@@ -391,7 +363,6 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This error code is defined by the Language Server Protocol.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">content_modified</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">ErrorCode</span>::<span class="ident">ContentModified</span>)
     }
@@ -403,6 +374,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {}
+<span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
+}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "lspower";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
