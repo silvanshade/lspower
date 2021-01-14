@@ -1,13 +1,13 @@
 //! `tower` server which multiplexes bidirectional traffic over one connection.
 
-#[cfg(feature = "runtime-independent")]
+#[cfg(feature = "runtime-agnostic")]
 use async_codec_lite::{FramedRead, FramedWrite};
-#[cfg(feature = "runtime-independent")]
+#[cfg(feature = "runtime-agnostic")]
 use futures::io::{AsyncRead, AsyncWrite};
 
-#[cfg(not(feature = "runtime-independent"))]
+#[cfg(feature = "runtime-tokio")]
 use tokio::io::{AsyncRead, AsyncWrite};
-#[cfg(not(feature = "runtime-independent"))]
+#[cfg(feature = "runtime-tokio")]
 use tokio_util::codec::{FramedRead, FramedWrite};
 
 use super::{
@@ -178,9 +178,9 @@ mod tests {
     use super::*;
     use futures::{future, future::Ready, stream};
 
-    #[cfg(feature = "runtime-independent")]
+    #[cfg(feature = "runtime-agnostic")]
     use futures::io::Cursor;
-    #[cfg(not(feature = "runtime-independent"))]
+    #[cfg(feature = "runtime-tokio")]
     use std::io::Cursor;
 
     const REQUEST: &str = r#"{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}"#;

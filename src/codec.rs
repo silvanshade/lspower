@@ -1,6 +1,6 @@
-#[cfg(feature = "runtime-independent")]
+#[cfg(feature = "runtime-agnostic")]
 use async_codec_lite::{Decoder, Encoder};
-#[cfg(not(feature = "runtime-independent"))]
+#[cfg(feature = "runtime-tokio")]
 use tokio_util::codec::{Decoder, Encoder};
 
 use bytes::{Buf, BufMut, BytesMut};
@@ -76,7 +76,7 @@ impl<T> Default for LanguageServerCodec<T> {
     }
 }
 
-#[cfg(feature = "runtime-independent")]
+#[cfg(feature = "runtime-agnostic")]
 impl<T: serde::Serialize> Encoder for LanguageServerCodec<T> {
     type Error = ParseError;
     type Item = T;
@@ -96,7 +96,7 @@ impl<T: serde::Serialize> Encoder for LanguageServerCodec<T> {
     }
 }
 
-#[cfg(not(feature = "runtime-independent"))]
+#[cfg(feature = "runtime-tokio")]
 impl<T: serde::Serialize> Encoder<T> for LanguageServerCodec<T> {
     type Error = ParseError;
 

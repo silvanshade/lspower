@@ -18,13 +18,12 @@ exclude = ["./lspower-macros"]
 maintenance = { status = "experimental" }
 
 [features]
-default = ["tokio", "tokio-util"]
-runtime-independent = ["async-codec-lite"]
+default = ["runtime-tokio"]
+runtime-agnostic = ["async-codec-lite"]
+runtime-tokio = ["tokio", "tokio-util"]
 
 [dependencies]
-anyhow = "1.0"
 async-channel = "1.5"
-async-compat = "0.1"
 async-oneshot = "0.4"
 async-trait = "0.1"
 auto_impl = "0.4"
@@ -47,7 +46,6 @@ optional = true
 
 [dependencies.tokio]
 version = "1.0"
-features = ["rt", "rt-multi-thread", "time"]
 optional = true
 
 [dependencies.tokio-util]
@@ -57,7 +55,7 @@ optional = true
 
 [dev-dependencies]
 env_logger = "0.8"
-tokio = { version = "1.0", features = ["io-std", "io-util", "macros", "net", "rt-multi-thread"] }
+tokio = { version = "1.0", features = ["io-std", "io-util", "macros", "net", "rt-multi-thread", "time"] }
 tower-test = "0.4"
 
 [workspace]
