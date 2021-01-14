@@ -261,14 +261,14 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! `tower` server which multiplexes bidirectional traffic over one connection.</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">async_codec_lite</span>::{<span class="ident">FramedRead</span>, <span class="ident">FramedWrite</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">io</span>::{<span class="ident">AsyncRead</span>, <span class="ident">AsyncWrite</span>};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-tokio&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">io</span>::{<span class="ident">AsyncRead</span>, <span class="ident">AsyncWrite</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-tokio&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tokio_util</span>::<span class="ident">codec</span>::{<span class="ident">FramedRead</span>, <span class="ident">FramedWrite</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::{
@@ -439,9 +439,9 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">future</span>, <span class="ident">future</span>::<span class="ident">Ready</span>, <span class="ident">stream</span>};
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">io</span>::<span class="ident">Cursor</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-independent&quot;</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-tokio&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Cursor</span>;
 
     <span class="kw">const</span> <span class="ident">REQUEST</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{},&quot;id&quot;:1}&quot;#</span>;
