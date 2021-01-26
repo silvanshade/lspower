@@ -853,7 +853,8 @@ pub trait LanguageServer: Send + Sync + 'static {
 
     /// [`codeAction/resolve`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#codeAction_resolve
     #[rpc(name = "codeAction/resolve")]
-    async fn code_action_resolve(&self) -> crate::jsonrpc::Result<()> {
+    async fn code_action_resolve(&self, params: lsp::CodeAction) -> crate::jsonrpc::Result<lsp::CodeAction> {
+        let _ = params;
         log::error!("Got a codeAction/resolve request, but it is not implemented");
         Err(crate::jsonrpc::Error::method_not_found())
     }
