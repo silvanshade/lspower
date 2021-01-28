@@ -326,19 +326,6 @@
 <span id="323">323</span>
 <span id="324">324</span>
 <span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for sending data to and from the language client.</span>
 
@@ -389,8 +376,8 @@
     <span class="doccomment">/// This corresponds to the [`window/logMessage`] notification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`window/logMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_logMessage</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp_types</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
-        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">LogMessage</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">LogMessageParams</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
+        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">LogMessage</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">LogMessageParams</span> {
             <span class="ident">typ</span>,
             <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
         })
@@ -402,8 +389,8 @@
     <span class="doccomment">/// This corresponds to the [`window/showMessage`] notification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`window/showMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessage</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp_types</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
-        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">ShowMessage</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">ShowMessageParams</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
+        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">ShowMessage</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">ShowMessageParams</span> {
             <span class="ident">typ</span>,
             <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
         })
@@ -420,11 +407,11 @@
     <span class="doccomment">/// [`window/showMessageRequest`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessageRequest</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">typ</span>: <span class="ident">lsp_types</span>::<span class="ident">MessageType</span>,
+        <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>,
         <span class="ident">message</span>: <span class="ident">M</span>,
-        <span class="ident">actions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">ShowMessageRequest</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">ShowMessageRequestParams</span> {
+        <span class="ident">actions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ShowMessageRequest</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">ShowMessageRequestParams</span> {
             <span class="ident">typ</span>,
             <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">to_string</span>(),
             <span class="ident">actions</span>,
@@ -444,8 +431,7 @@
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_null</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_array</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_object</span>() {
                     <span class="ident">value</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">Value</span>::<span class="ident">Array</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">value</span>]);
                 }
-                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">value</span>)
-                    .<span class="kw">await</span>;
+                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">value</span>).<span class="kw">await</span>;
             },
         }
     }
@@ -462,11 +448,9 @@
     <span class="doccomment">/// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">registrations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">Registration</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">RegisterCapability</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">RegistrationParams</span> {
-            <span class="ident">registrations</span>,
-        })
-        .<span class="kw">await</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">registrations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Registration</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">RegisterCapability</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">RegistrationParams</span> { <span class="ident">registrations</span> })
+            .<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Unregisters a capability with the client.</span>
@@ -483,9 +467,9 @@
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unregister_capability</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">unregisterations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">Unregistration</span><span class="op">&gt;</span>,
+        <span class="ident">unregisterations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Unregistration</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">UnregisterCapability</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">UnregistrationParams</span> {
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">UnregisterCapability</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">UnregistrationParams</span> {
             <span class="ident">unregisterations</span>,
         })
         .<span class="kw">await</span>
@@ -510,8 +494,8 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This request was introduced in specification version 3.6.0.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">WorkspaceFoldersRequest</span><span class="op">&gt;</span>(())
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceFoldersRequest</span><span class="op">&gt;</span>(())
             .<span class="kw">await</span>
     }
 
@@ -540,12 +524,10 @@
     <span class="doccomment">/// This request was introduced in specification version 3.6.0.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configuration</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">ConfigurationItem</span><span class="op">&gt;</span>,
+        <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ConfigurationItem</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">WorkspaceConfiguration</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">ConfigurationParams</span> {
-            <span class="ident">items</span>,
-        })
-        .<span class="kw">await</span>
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceConfiguration</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">ConfigurationParams</span> { <span class="ident">items</span> })
+            .<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Requests a workspace resource be edited on the client side and returns whether the edit was</span>
@@ -563,14 +545,11 @@
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_edit</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">edit</span>: <span class="ident">lsp_types</span>::<span class="ident">WorkspaceEdit</span>,
+        <span class="ident">edit</span>: <span class="ident">lsp</span>::<span class="ident">WorkspaceEdit</span>,
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">lsp_types</span>::<span class="ident">ApplyWorkspaceEditParams</span> {
-            <span class="ident">edit</span>,
-            <span class="ident">label</span>,
-        })
-        .<span class="kw">await</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditParams</span> { <span class="ident">edit</span>, <span class="ident">label</span> })
+            .<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Submits validation diagnostics for an open file with the given URI.</span>
@@ -582,14 +561,9 @@
     <span class="doccomment">/// # Initialization</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This notification will only be sent if the server is initialized.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">publish_diagnostics</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">uri</span>: <span class="ident">lsp_types</span>::<span class="ident">Url</span>,
-        <span class="ident">diags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">Diagnostic</span><span class="op">&gt;</span>,
-        <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
-    ) {
-        <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">PublishDiagnostics</span><span class="op">&gt;</span>(
-            <span class="ident">lsp_types</span>::<span class="ident">PublishDiagnosticsParams</span>::<span class="ident">new</span>(<span class="ident">uri</span>, <span class="ident">diags</span>, <span class="ident">version</span>),
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">publish_diagnostics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">uri</span>: <span class="ident">lsp</span>::<span class="ident">Url</span>, <span class="ident">diags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Diagnostic</span><span class="op">&gt;</span>, <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">PublishDiagnostics</span><span class="op">&gt;</span>(
+            <span class="ident">lsp</span>::<span class="ident">PublishDiagnosticsParams</span>::<span class="ident">new</span>(<span class="ident">uri</span>, <span class="ident">diags</span>, <span class="ident">version</span>),
         )
         .<span class="kw">await</span>;
     }
@@ -601,14 +575,14 @@
     <span class="doccomment">/// This notification will only be sent if the server is initialized.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
     {
         <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
     {
         <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>));
@@ -619,7 +593,7 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification_initialized</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Initialized</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
             <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
@@ -631,7 +605,7 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
+        <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
     {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>));
@@ -656,7 +630,7 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request_initialized</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
+        <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Initialized</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
             <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>
