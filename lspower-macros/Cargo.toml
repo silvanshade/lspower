@@ -1,6 +1,6 @@
 [package]
 name = "lspower-macros"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
 description = "Internal procedural macros for lspower"
 edition = "2018"
