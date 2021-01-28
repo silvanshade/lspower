@@ -1,7 +1,4 @@
-//! Cargo xtask definitions for the project.
-
 #![deny(clippy::all)]
-#![deny(missing_docs)]
 #![deny(unsafe_code)]
 
 type Fallible<T> = Result<T, Box<dyn std::error::Error>>;
@@ -111,7 +108,6 @@ mod subcommand {
         use crate::metadata;
         use std::process::Command;
 
-        // Run `cargo build` with custom options.
         pub fn build(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-build
@@ -140,7 +136,6 @@ FLAGS:
             Ok(())
         }
 
-        // Run `cargo check` with custom options.
         pub fn check(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-check
@@ -174,7 +169,6 @@ FLAGS:
             Ok(())
         }
 
-        // Run `cargo clippy` with custom options.
         pub fn clippy(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-clippy
@@ -208,7 +202,6 @@ FLAGS:
             Ok(())
         }
 
-        // Run `cargo doc` with custom options.
         pub fn doc(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-doc
@@ -236,7 +229,6 @@ FLAGS:
             Ok(())
         }
 
-        // Run `cargo format` with custom options.
         pub fn format(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-format
@@ -264,7 +256,6 @@ FLAGS:
             Ok(())
         }
 
-        // Run `cargo test` with custom options.
         pub fn test(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
             let help = r#"
 xtask-test
