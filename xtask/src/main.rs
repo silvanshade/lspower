@@ -161,9 +161,6 @@ FLAGS:
             cmd.args(&["check", "--all-targets"]);
             cmd.args(&["--package", "xtask"]);
             cmd.args(&["--package", "lspower"]);
-            // if cfg!(target_os = "linux") {
-            //     cmd.args(&["--package", "lspower-fuzz"]);
-            // }
             cmd.args(cargo_args);
             cmd.status()?;
             Ok(())
@@ -193,9 +190,6 @@ FLAGS:
             cmd.args(&["clippy", "--all-targets"]);
             cmd.args(&["--package", "xtask"]);
             cmd.args(&["--package", "lspower"]);
-            // if cfg!(target_os = "linux") {
-            //     cmd.args(&["--package", "lspower-fuzz"]);
-            // }
             cmd.args(cargo_args);
             cmd.args(&["--", "-D", "warnings"]);
             cmd.status()?;
@@ -281,9 +275,6 @@ FLAGS:
             cmd.args(&["test", "--examples", "--lib", "--tests"]);
             cmd.args(&["--package", "xtask"]);
             cmd.args(&["--package", "lspower"]);
-            // if cfg!(target_os = "linux") {
-            //     cmd.args(&["--package", "lspower-fuzz"]);
-            // }
             cmd.args(cargo_args);
             cmd.status()?;
 
