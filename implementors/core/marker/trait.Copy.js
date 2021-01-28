@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["lspower"] = [{"text":"impl Copy for ErrorCode","synthetic":false,"types":[]}];
+implementors["lspower"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"enum\" href=\"lspower/jsonrpc/enum.ErrorCode.html\" title=\"enum lspower::jsonrpc::ErrorCode\">ErrorCode</a>","synthetic":false,"types":["lspower::jsonrpc::error::ErrorCode"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
