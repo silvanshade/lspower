@@ -368,7 +368,7 @@
 
 <span class="kw">impl</span> <span class="ident">ClientRequest</span> {
     <span class="doccomment">/// Constructs a JSON-RPC request from its corresponding LSP type.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">u64</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">lsp_types</span>::<span class="ident">request</span>::<span class="ident">Request</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">u64</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="comment">// Since `R::Params` come from the `lsp-types` crate and validity is enforced via the</span>
         <span class="comment">// `Request` trait, the `unwrap()` call below should never fail.</span>
         <span class="ident">ClientRequest</span> {
@@ -382,7 +382,7 @@
     }
 
     <span class="doccomment">/// Constructs a JSON-RPC notification from its corresponding LSP type.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">notification</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span><span class="op">&gt;</span>(<span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">notification</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">lsp_types</span>::<span class="ident">notification</span>::<span class="ident">Notification</span><span class="op">&gt;</span>(<span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="comment">// Since `N::Params` comes from the `lsp-types` crate and validity is enforced via the</span>
         <span class="comment">// `Notification` trait, the `unwrap()` call below should never fail.</span>
         <span class="ident">ClientRequest</span> {
