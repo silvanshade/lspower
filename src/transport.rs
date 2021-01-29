@@ -42,33 +42,6 @@ where
     O: AsyncWrite,
 {
     /// Creates a new `Server` with the given `stdin` and `stdout` handles.
-    ///
-    /// # Examples
-    ///
-    /// Initialize with a standard I/O transport:
-    ///
-    /// ```no_run
-    /// # async fn docs() -> std::io::Result<()> {
-    /// # use lspower::Server;
-    /// let stdin = tokio::io::stdin();
-    /// let stdout = tokio::io::stdout();
-    /// let server = Server::new(stdin, stdout);
-    /// # Ok(())
-    /// # }
-    /// ```
-    ///
-    /// Initialize with a TCP transport:
-    ///
-    /// ```no_run
-    /// # async fn docs() -> std::io::Result<()> {
-    /// # use lspower::Server;
-    /// let mut listener = tokio::net::TcpListener::bind("127.0.0.1:9257").await?;
-    /// let (stream, _) = listener.accept().await?;
-    /// let (read, write) = tokio::io::split(stream);
-    /// let server = Server::new(read, write);
-    /// # Ok(())
-    /// # }
-    /// ```
     pub fn new(stdin: I, stdout: O) -> Self {
         Server {
             stdin,

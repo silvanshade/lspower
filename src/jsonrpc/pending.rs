@@ -2,7 +2,7 @@
 
 use super::{Error, Id, Response, Result};
 use dashmap::{mapref::entry::Entry, DashMap};
-use futures::future;
+use futures::{channel::oneshot, future};
 use log::{info, warn};
 use serde::Serialize;
 use std::{
@@ -84,7 +84,7 @@ impl Debug for ServerRequests {
 }
 
 /// A hashmap containing pending client requests, keyed by request ID.
-pub struct ClientRequests(DashMap<Id, async_oneshot::Sender<Response>>);
+pub struct ClientRequests(DashMap<Id, oneshot::Sender<Response>>);
 
 impl ClientRequests {
     /// Creates a new pending client requests map.
@@ -114,7 +114,7 @@ impl ClientRequests {
     pub fn wait(&self, id: Id) -> impl Future<Output = Response> + Send + 'static {
         match self.0.entry(id) {
             Entry::Vacant(entry) => {
-                let (tx, rx) = async_oneshot::oneshot();
+                let (tx, rx) = oneshot::channel();
                 entry.insert(tx);
                 async { rx.await.expect("sender already dropped") }
             },

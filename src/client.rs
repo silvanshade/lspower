@@ -1,5 +1,6 @@
 //! Types for sending data to and from the language client.
 
+use futures::{channel::mpsc, sink::SinkExt};
 use std::{
     fmt::{self, Debug, Formatter},
     sync::{
@@ -9,7 +10,7 @@ use std::{
 };
 
 struct ClientInner {
-    sender: async_channel::Sender<crate::jsonrpc::Outgoing>,
+    sender: mpsc::Sender<crate::jsonrpc::Outgoing>,
     request_id: AtomicU64,
     pending_requests: Arc<crate::jsonrpc::ClientRequests>,
     state: Arc<crate::server::State>,
@@ -28,7 +29,7 @@ pub struct Client {
 
 impl Client {
     pub(super) fn new(
-        sender: async_channel::Sender<crate::jsonrpc::Outgoing>,
+        sender: mpsc::Sender<crate::jsonrpc::Outgoing>,
         pending_requests: Arc<crate::jsonrpc::ClientRequests>,
         state: Arc<crate::server::State>,
     ) -> Self {
@@ -255,7 +256,7 @@ impl Client {
     where
         N: lsp::notification::Notification,
     {
-        let sender = self.inner.sender.clone();
+        let mut sender = self.inner.sender.clone();
         let message = crate::jsonrpc::Outgoing::Request(crate::jsonrpc::ClientRequest::notification::<N>(params));
         if sender.send(message).await.is_err() {
             log::error!("failed to send notification")

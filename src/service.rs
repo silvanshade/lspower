@@ -1,7 +1,7 @@
 //! Service abstraction for language servers.
 
-use async_channel::Receiver;
 use futures::{
+    channel::mpsc,
     future,
     stream::{FusedStream, Stream},
     FutureExt,
@@ -33,7 +33,7 @@ impl Error for ExitedError {
 /// Stream of messages produced by the language server.
 #[derive(Debug)]
 #[must_use = "streams do nothing unless polled"]
-pub struct MessageStream(Receiver<crate::jsonrpc::Outgoing>);
+pub struct MessageStream(mpsc::Receiver<crate::jsonrpc::Outgoing>);
 
 impl Stream for MessageStream {
     type Item = crate::jsonrpc::Outgoing;
@@ -46,7 +46,7 @@ impl Stream for MessageStream {
 
 impl FusedStream for MessageStream {
     fn is_terminated(&self) -> bool {
-        self.0.is_closed() && self.0.is_empty()
+        self.0.is_terminated()
     }
 }
 
@@ -83,7 +83,7 @@ impl LspService {
         T: crate::LanguageServer,
     {
         let state = Arc::new(crate::server::State::new());
-        let (tx, rx) = async_channel::bounded(1);
+        let (tx, rx) = mpsc::channel(1);
         let messages = MessageStream(rx);
 
         let pending_client = Arc::new(crate::jsonrpc::ClientRequests::new());
