@@ -2,7 +2,7 @@
 
 use super::{Error, Id, Response, Result};
 use dashmap::{mapref::entry::Entry, DashMap};
-use futures::future;
+use futures_util::future;
 use log::{info, warn};
 use serde::Serialize;
 use std::{

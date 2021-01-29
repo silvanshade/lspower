@@ -1,11 +1,8 @@
 //! Service abstraction for language servers.
 
 use async_channel::Receiver;
-use futures::{
-    future,
-    stream::{FusedStream, Stream},
-    FutureExt,
-};
+use futures_core::stream::{FusedStream, Stream};
+use futures_util::{future, FutureExt};
 use log::trace;
 use std::{
     error::Error,

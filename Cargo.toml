@@ -29,7 +29,8 @@ async-trait = "0.1"
 auto_impl = "0.4"
 bytes = "1.0"
 dashmap = "4.0"
-futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+futures-core = "0.3"
+futures-util = { version = "0.3", features = ["io", "sink"] }
 log = "0.4"
 lsp = { version = "0.86", package = "lsp-types" }
 lspower-macros = { version = "0.2", path = "lspower-macros" }

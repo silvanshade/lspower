@@ -225,7 +225,7 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                 server::{State, StateKind},
                 service::ExitedError,
             };
-            use futures::{future, FutureExt};
+            use futures_util::future::{self, FutureExt};
             use log::{error, info, warn};
             use lsp::{
                 request::{GotoDeclarationParams, GotoImplementationParams, GotoTypeDefinitionParams},

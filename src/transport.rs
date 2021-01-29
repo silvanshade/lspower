@@ -14,11 +14,13 @@ use super::{
     codec::LanguageServerCodec,
     jsonrpc::{self, Incoming, Outgoing, Response},
 };
-use futures::{
-    channel::mpsc,
+use futures_core::stream::Stream;
+use futures_util::{
     future::{self, Either, FutureExt, TryFutureExt},
     sink::SinkExt,
-    stream::{self, Empty, Stream, StreamExt},
+    stream,
+    stream::Empty,
+    StreamExt,
 };
 use log::error;
 use std::{
@@ -103,7 +105,7 @@ where
         T::Error: Into<Box<dyn Error + Send + Sync>>,
         T::Future: Send,
     {
-        let (mut sender, receiver) = mpsc::channel(16);
+        let (sender, receiver) = async_channel::bounded(16);
 
         let mut framed_stdin = FramedRead::new(self.stdin, LanguageServerCodec::default());
         let framed_stdout = FramedWrite::new(self.stdout, LanguageServerCodec::default());
@@ -142,7 +144,7 @@ where
             }
         };
 
-        futures::join!(reader, printer);
+        futures_util::join!(reader, printer);
     }
 }
 
@@ -176,7 +178,7 @@ impl Stream for Nothing {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use futures::{future, future::Ready, stream};
+    use futures_util::{future, future::Ready, stream};
 
     #[cfg(feature = "runtime-agnostic")]
     use futures::io::Cursor;
