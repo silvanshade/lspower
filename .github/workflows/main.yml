@@ -160,8 +160,8 @@ jobs:
           fail_ci_if_error: true
 
   # verify that tests pass
-  cargo-test:
-    name: Run cargo test
+  cargo-test-agnostic:
+    name: Run cargo test (runtime-agnostic)
     needs: [skip-commit]
     strategy:
       matrix:
@@ -181,5 +181,33 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-targets --workspace
+          args: --all-targets --workspace --no-default-features --features runtime-agnostic
 
+  # verify that tests pass
+  cargo-test-tokio:
+    name: Run cargo test (runtime-tokio)
+    needs: [skip-commit]
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RUST_TOOLCHAIN: stable
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          override: yes
+      - name: Run cargo test (without docs)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-targets --workspace --no-default-features --features runtime-tokio
+      - name: Run cargo test (with docs)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --doc
