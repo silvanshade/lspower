@@ -326,9 +326,11 @@
 <span id="323">323</span>
 <span id="324">324</span>
 <span id="325">325</span>
+<span id="326">326</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for sending data to and from the language client.</span>
 
+<span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">channel</span>::<span class="ident">mpsc</span>, <span class="ident">sink</span>::<span class="ident">SinkExt</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>},
     <span class="ident">sync</span>::{
@@ -338,7 +340,7 @@
 };
 
 <span class="kw">struct</span> <span class="ident">ClientInner</span> {
-    <span class="ident">sender</span>: <span class="ident">async_channel</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
+    <span class="ident">sender</span>: <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
     <span class="ident">request_id</span>: <span class="ident">AtomicU64</span>,
     <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequests</span><span class="op">&gt;</span>,
     <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">State</span><span class="op">&gt;</span>,
@@ -357,7 +359,7 @@
 
 <span class="kw">impl</span> <span class="ident">Client</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">sender</span>: <span class="ident">async_channel</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
+        <span class="ident">sender</span>: <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
         <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequests</span><span class="op">&gt;</span>,
         <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">State</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -584,7 +586,7 @@
     <span class="kw">where</span>
         <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
     {
-        <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>));
         <span class="kw">if</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
             <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send notification&quot;</span>)

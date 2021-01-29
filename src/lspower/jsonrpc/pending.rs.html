@@ -187,7 +187,7 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Error</span>, <span class="ident">Id</span>, <span class="ident">Response</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">dashmap</span>::{<span class="ident">mapref</span>::<span class="ident">entry</span>::<span class="ident">Entry</span>, <span class="ident">DashMap</span>};
-<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">future</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">channel</span>::<span class="ident">oneshot</span>, <span class="ident">future</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">info</span>, <span class="ident">warn</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -269,7 +269,7 @@
 }
 
 <span class="doccomment">/// A hashmap containing pending client requests, keyed by request ID.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientRequests</span>(<span class="ident">DashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">async_oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&gt;</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientRequests</span>(<span class="ident">DashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&gt;</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">ClientRequests</span> {
     <span class="doccomment">/// Creates a new pending client requests map.</span>
@@ -299,7 +299,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Id</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Response</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">entry</span>(<span class="ident">id</span>) {
             <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">async_oneshot</span>::<span class="ident">oneshot</span>();
+                <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">oneshot</span>::<span class="ident">channel</span>();
                 <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">tx</span>);
                 <span class="kw">async</span> { <span class="ident">rx</span>.<span class="kw">await</span>.<span class="ident">expect</span>(<span class="string">&quot;sender already dropped&quot;</span>) }
             },
