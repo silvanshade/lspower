@@ -1,68 +1,6 @@
 //! Language Server Protocol (LSP) server abstraction for [Tower].
 //!
 //! [Tower]: https://github.com/tower-rs/tower
-//!
-//! # Example
-//!
-//! ```rust
-//! use lspower::jsonrpc::Result;
-//! use lspower::lsp::*;
-//! use lspower::{Client, LanguageServer, LspService, Server};
-//!
-//! #[derive(Debug)]
-//! struct Backend {
-//!     client: Client,
-//! }
-//!
-//! #[lspower::async_trait]
-//! impl LanguageServer for Backend {
-//!     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
-//!         Ok(InitializeResult::default())
-//!     }
-//!
-//!     async fn initialized(&self, _: InitializedParams) {
-//!         self.client
-//!             .log_message(MessageType::Info, "server initialized!")
-//!             .await;
-//!     }
-//!
-//!     async fn shutdown(&self) -> Result<()> {
-//!         Ok(())
-//!     }
-//!
-//!     async fn completion(&self, _: CompletionParams) -> Result<Option<CompletionResponse>> {
-//!         Ok(Some(CompletionResponse::Array(vec![
-//!             CompletionItem::new_simple("Hello".to_string(), "Some detail".to_string()),
-//!             CompletionItem::new_simple("Bye".to_string(), "More detail".to_string())
-//!         ])))
-//!     }
-//!
-//!     async fn hover(&self, _: HoverParams) -> Result<Option<Hover>> {
-//!         Ok(Some(Hover {
-//!             contents: HoverContents::Scalar(
-//!                 MarkedString::String("You're hovering!".to_string())
-//!             ),
-//!             range: None
-//!         }))
-//!     }
-//! }
-//!
-//! #[tokio::main]
-//! async fn main() {
-//! #   use std::io::Cursor;
-//!     let stdin = tokio::io::stdin();
-//! #   let message = r#"{"jsonrpc":"2.0","method":"exit"}"#;
-//! #   let stdin = Cursor::new(format!("Content-Length: {}\r\n\r\n{}", message.len(), message).into_bytes());
-//!     let stdout = tokio::io::stdout();
-//! #   let stdout = Cursor::new(Vec::new());
-//!
-//!     let (service, messages) = LspService::new(|client| Backend { client });
-//!     Server::new(stdin, stdout)
-//!         .interleave(messages)
-//!         .serve(service)
-//!         .await;
-//! }
-//! ```
 
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
