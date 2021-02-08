@@ -6,7 +6,6 @@ use futures::{
     stream::{FusedStream, Stream},
     FutureExt,
 };
-use log::trace;
 use std::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
@@ -122,7 +121,7 @@ impl Service<crate::jsonrpc::Incoming> for LspService {
                     super::generated_impl::handle_request(self.server.clone(), &self.state, &self.pending_server, req)
                 },
                 crate::jsonrpc::Incoming::Response(res) => {
-                    trace!("received client response: {:?}", res);
+                    log::trace!("received client response: {:?}", res);
                     self.pending_client.insert(res);
                     future::ok(None).boxed()
                 },

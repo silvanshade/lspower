@@ -20,7 +20,6 @@ use futures::{
     sink::SinkExt,
     stream::{self, Empty, Stream, StreamExt},
 };
-use log::error;
 use std::{
     error::Error,
     pin::Pin,
@@ -85,7 +84,7 @@ where
 
         let printer = stream::select(responses, interleave)
             .map(Ok)
-            .forward(framed_stdout.sink_map_err(|e| error!("failed to encode message: {}", e)))
+            .forward(framed_stdout.sink_map_err(|e| log::error!("failed to encode message: {}", e)))
             .map(|_| ());
 
         let reader = async move {
@@ -93,7 +92,7 @@ where
                 let request = match msg {
                     Ok(req) => req,
                     Err(err) => {
-                        error!("failed to decode message: {}", err);
+                        log::error!("failed to decode message: {}", err);
                         let response = Response::error(None, jsonrpc::Error::parse_error());
                         let response_fut = future::ready(Some(Outgoing::Response(response)));
                         sender.send(Either::Right(response_fut)).await.unwrap();
@@ -102,12 +101,12 @@ where
                 };
 
                 if let Err(err) = future::poll_fn(|cx| service.poll_ready(cx)).await {
-                    error!("{}", display_sources(err.into().as_ref()));
+                    log::error!("{}", display_sources(err.into().as_ref()));
                     return;
                 }
 
                 let response_fut = service.call(request).unwrap_or_else(|err| {
-                    error!("{}", display_sources(err.into().as_ref()));
+                    log::error!("{}", display_sources(err.into().as_ref()));
                     None
                 });
 
