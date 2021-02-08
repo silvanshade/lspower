@@ -903,7 +903,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;workspace/didChangeWorkspaceFolders&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_change_workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidChangeWorkspaceFoldersParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeWorkspaceFolders notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeWorkspaceFolders notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`workspace/didChangeConfiguration`] notification is sent from the client to the server</span>
@@ -913,7 +913,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;workspace/didChangeConfiguration&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_change_configuration</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidChangeConfigurationParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeConfiguration notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeConfiguration notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`workspace/didChangeWatchedFiles`] notification is sent from the client to the server</span>
@@ -928,7 +928,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;workspace/didChangeWatchedFiles&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_change_watched_files</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidChangeWatchedFilesParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeWatchedFiles notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/didChangeWatchedFiles notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`workspace/symbol`] request is sent from the client to the server to list project-wide</span>
@@ -941,7 +941,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">WorkspaceSymbolParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SymbolInformation</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/symbol request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/symbol request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -958,7 +958,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">ExecuteCommandParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/executeCommand request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/executeCommand request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -973,7 +973,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/didOpen&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidOpenTextDocumentParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didOpen notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didOpen notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`textDocument/didChange`] notification is sent from the client to the server to signal</span>
@@ -986,7 +986,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/didChange&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidChangeTextDocumentParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didChange notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didChange notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`textDocument/willSave`] notification is sent from the client to the server before the</span>
@@ -996,7 +996,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/willSave&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">will_save</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">WillSaveTextDocumentParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/willSave notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/willSave notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`textDocument/willSaveWaitUntil`] request is sent from the client to the server before</span>
@@ -1013,7 +1013,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">WillSaveTextDocumentParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">TextEdit</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/willSaveWaitUntil request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/willSaveWaitUntil request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1024,7 +1024,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/didSave&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_save</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidSaveTextDocumentParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didSave notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didSave notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`textDocument/didClose`] notification is sent from the client to the server when the</span>
@@ -1037,7 +1037,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/didClose&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">did_close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DidCloseTextDocumentParams</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didClose notification, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/didClose notification, but it is not implemented&quot;</span>);
     }
 
     <span class="doccomment">/// The [`textDocument/completion`] request is sent from the client to the server to compute</span>
@@ -1054,7 +1054,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CompletionParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CompletionResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/completion request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/completion request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1065,7 +1065,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;completionItem/resolve&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">completion_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CompletionItem</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CompletionItem</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a completionItem/resolve request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a completionItem/resolve request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1079,7 +1079,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/hover&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">hover</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">HoverParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Hover</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/hover request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/hover request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1093,7 +1093,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">SignatureHelpParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SignatureHelp</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/signatureHelp request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/signatureHelp request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1122,7 +1122,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoDeclarationParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoDeclarationResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/declaration request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/declaration request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1149,7 +1149,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">GotoDefinitionParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">GotoDefinitionResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/definition request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/definition request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1178,7 +1178,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoTypeDefinitionParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoTypeDefinitionResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/typeDefinition request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/typeDefinition request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1207,7 +1207,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoImplementationParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">GotoImplementationResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/implementation request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/implementation request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1218,7 +1218,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/references&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">references</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">ReferenceParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Location</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/references request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/references request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1238,7 +1238,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentHighlightParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">DocumentHighlight</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentHighlight request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentHighlight request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1262,7 +1262,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentSymbolParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">DocumentSymbolResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentSymbol request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentSymbol request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1303,7 +1303,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CodeActionParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CodeActionResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/codeAction request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/codeAction request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1314,7 +1314,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/codeLens&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">code_lens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CodeLensParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CodeLens</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/codeLens request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/codeLens request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1325,7 +1325,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;codeLens/resolve&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">code_lens_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CodeLens</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CodeLens</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a codeLens/resolve request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a codeLens/resolve request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1354,7 +1354,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentLinkParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">DocumentLink</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentLink request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentLink request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1368,7 +1368,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;documentLink/resolve&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">document_link_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentLink</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">DocumentLink</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a documentLink/resolve request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a documentLink/resolve request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1392,7 +1392,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentColorParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ColorInformation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentColor request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/documentColor request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1418,7 +1418,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">ColorPresentationParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ColorPresentation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/colorPresentation request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/colorPresentation request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1432,7 +1432,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentFormattingParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">TextEdit</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/formatting request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/formatting request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1446,7 +1446,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentRangeFormattingParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">TextEdit</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/rangeFormatting request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/rangeFormatting request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1460,7 +1460,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">DocumentOnTypeFormattingParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">TextEdit</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/onTypeFormatting request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/onTypeFormatting request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1472,7 +1472,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;textDocument/rename&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">rename</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">RenameParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">WorkspaceEdit</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/rename request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/rename request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1490,7 +1490,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">TextDocumentPositionParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">PrepareRenameResponse</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/prepareRename request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/prepareRename request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1508,7 +1508,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">FoldingRangeParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">FoldingRange</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/foldingRange request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/foldingRange request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1530,7 +1530,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">SelectionRangeParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SelectionRange</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/selectionRange request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/selectionRange request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1541,7 +1541,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CallHierarchyIncomingCallsParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CallHierarchyIncomingCall</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a callHierarchy/incomingCalls request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a callHierarchy/incomingCalls request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1552,7 +1552,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CallHierarchyOutgoingCallsParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CallHierarchyOutgoingCall</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a callHierarchy/outgoingCalls request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a callHierarchy/outgoingCalls request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1563,7 +1563,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CallHierarchyPrepareParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CallHierarchyItem</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/prepareCallHierarchy request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/prepareCallHierarchy request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1574,7 +1574,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">SemanticTokensParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SemanticTokensResult</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/full request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/full request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1585,7 +1585,7 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">SemanticTokensDeltaParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SemanticTokensFullDeltaResult</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/full/delta request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/full/delta request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1596,14 +1596,14 @@
         <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">SemanticTokensRangeParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">SemanticTokensRangeResult</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/range request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a textDocument/semanticTokens/range request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
     <span class="doccomment">/// [`workspace/semanticTokens/full`]: https://microsoft.github.io/language-server-protocol/specifications/specification-3-16/#textDocument_semanticTokens</span>
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;workspace/semanticTokens/refresh&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">semantic_tokens_refresh</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/semanticTokens/refresh request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a workspace/semanticTokens/refresh request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1611,7 +1611,7 @@
     <span class="attribute">#[<span class="ident">rpc</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;codeAction/resolve&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">code_action_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">lsp</span>::<span class="ident">CodeAction</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">CodeAction</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a codeAction/resolve request, but it is not implemented&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Got a codeAction/resolve request, but it is not implemented&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">method_not_found</span>())
     }
 
@@ -1623,7 +1623,7 @@
         <span class="ident">params</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">params</span>;
-        <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(
+        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
             <span class="string">&quot;Got a {} request, but LanguageServer::request_else is not implemented&quot;</span>,
             <span class="ident">method</span>
         );
