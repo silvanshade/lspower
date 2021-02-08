@@ -102,13 +102,15 @@ impl LanguageServer for Backend {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
-    let listener = TcpListener::bind("127.0.0.1:9257").await.unwrap();
-    let (stream, _) = listener.accept().await.unwrap();
+    let listener = TcpListener::bind("127.0.0.1:9257").await?;
+    let (stream, _) = listener.accept().await?;
     let (read, write) = tokio::io::split(stream);
 
     let (service, messages) = LspService::new(|client| Backend { client });
     Server::new(read, write).interleave(messages).serve(service).await;
+
+    Ok(())
 }
