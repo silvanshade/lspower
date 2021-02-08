@@ -3,7 +3,6 @@
 use super::{Error, Id, Response, Result};
 use dashmap::{mapref::entry::Entry, DashMap};
 use futures::{channel::oneshot, future};
-use log::{info, warn};
 use serde::Serialize;
 use std::{
     fmt::{self, Debug, Formatter},
@@ -57,9 +56,9 @@ impl ServerRequests {
     pub fn cancel(&self, id: &Id) {
         if let Some((_, handle)) = self.0.remove(id) {
             handle.abort();
-            info!("successfully cancelled request with ID: {}", id);
+            log::info!("successfully cancelled request with ID: {}", id);
         } else {
-            warn!(
+            log::warn!(
                 "client asked to cancel request {}, but no such pending request exists, ignoring",
                 id
             );
@@ -97,10 +96,10 @@ impl ClientRequests {
     /// The corresponding `.wait()` future will then resolve to the given value.
     pub fn insert(&self, r: Response) {
         match r.id() {
-            None => warn!("received response with request ID of `null`, ignoring"),
+            None => log::warn!("received response with request ID of `null`, ignoring"),
             Some(id) => match self.0.remove(id) {
                 Some((_, tx)) => tx.send(r).expect("receiver already dropped"),
-                None => warn!("received response with unknown request ID: {}", id),
+                None => log::warn!("received response with unknown request ID: {}", id),
             },
         }
     }
