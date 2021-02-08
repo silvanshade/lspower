@@ -428,7 +428,7 @@
     <span class="doccomment">/// [`telemetry/event`]: https://microsoft.github.io/language-server-protocol/specification#telemetry_event</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">telemetry_event</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">serde</span>::<span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">S</span>) {
         <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">data</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;invalid JSON in `telemetry/event` notification: {}&quot;</span>, <span class="ident">e</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;invalid JSON in `telemetry/event` notification: {}&quot;</span>, <span class="ident">e</span>),
             <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_null</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_array</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_object</span>() {
                     <span class="ident">value</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">Value</span>::<span class="ident">Array</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">value</span>]);
@@ -589,7 +589,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>));
         <span class="kw">if</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
-            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send notification&quot;</span>)
+            <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send notification&quot;</span>)
         }
     }
 
@@ -601,7 +601,7 @@
             <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>);
-            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
+            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
         }
     }
 
@@ -615,7 +615,7 @@
         <span class="kw">let</span> <span class="ident">response_waiter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">wait</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Id</span>::<span class="ident">Number</span>(<span class="ident">id</span>));
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>().<span class="ident">send</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
-            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send request&quot;</span>);
+            <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send request&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">internal_error</span>());
         }
 
@@ -639,7 +639,7 @@
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) <span class="op">+</span> <span class="number">1</span>;
             <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>);
-            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
+            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
             <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">not_initialized_error</span>())
         }
     }
