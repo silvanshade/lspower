@@ -108,12 +108,15 @@ async fn main() -> anyhow::Result<()> {
     env_logger::init();
 
     let listener = TcpListener::bind("127.0.0.1:9257").await?;
-    let (stream, _) = listener.accept().await?;
-    let stream = WsStream::new(accept_async(stream).await?);
-    let (read, write) = tokio::io::split(stream);
-
-    let (service, messages) = LspService::new(|client| Backend { client });
-    Server::new(read, write).interleave(messages).serve(service).await;
+    while let Ok((socket, _)) = listener.accept().await {
+        tokio::spawn(async move {
+            let stream = WsStream::new(accept_async(socket).await?);
+            let (read, write) = tokio::io::split(stream);
+            let (service, messages) = LspService::new(|client| Backend { client });
+            Server::new(read, write).interleave(messages).serve(service).await;
+            Ok::<_, anyhow::Error>(())
+        });
+    }
 
     Ok(())
 }
