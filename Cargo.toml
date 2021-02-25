@@ -33,7 +33,7 @@ futures = { version = "0.3", default-features = false, features = ["std", "async
 log = "0.4"
 lsp = { version = "0.86", package = "lsp-types" }
 lspower-macros = { version = "0.2", path = "lspower-macros" }
-nom = "6.0"
+nom = "6.1"
 serde = { version = "1.0" }
 serde_json = { version = "1.0" }
 thiserror = "1.0"
