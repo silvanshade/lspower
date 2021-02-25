@@ -178,45 +178,45 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
     }
 }
 
+fn parse_content_length(input: &[u8]) -> nom::IResult<&[u8], usize> {
+    let i = input;
+    let (i, _) = tag("Content-Length")(i)?;
+    let (i, _) = space0(i)?;
+    let (i, _) = tag(":")(i)?;
+    let (i, _) = space0(i)?;
+    let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
+        str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
+    })(i)?;
+    let (i, _) = crlf(i)?;
+    Ok((i, content_length))
+}
+
+fn parse_content_type(input: &[u8]) -> nom::IResult<&[u8], Option<&[u8]>> {
+    let i = input;
+    let (i, _) = tag("Content-Type")(i)?;
+    let (i, _) = space0(i)?;
+    let (i, _) = tag(":")(i)?;
+    let (i, _) = is_not(";\r")(i)?;
+    let (i, charset) = opt(|input| {
+        let i = input;
+        let (i, _) = tag(";")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, _) = tag("charset")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, _) = tag("=")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, charset) = opt(alt((tag("utf-8"), tag("utf8"))))(i)?;
+        Ok((i, charset))
+    })(i)?;
+    let (i, _) = crlf(i)?;
+    Ok((i, charset.flatten()))
+}
+
 fn parse_message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
     let i = input;
-
-    let (i, content_length) = (|input| {
-        let i = input;
-        let (i, _) = tag("Content-Length")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, _) = tag(":")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
-            str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
-        })(i)?;
-        let (i, _) = crlf(i)?;
-        Ok((i, content_length))
-    })(i)?;
-
-    let (i, _) = opt(|input| {
-        let i = input;
-        let (i, _) = tag("Content-Type")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, _) = tag(":")(i)?;
-        let (i, _) = is_not(";\r")(i)?;
-        let (i, _) = opt(|input| {
-            let i = input;
-            let (i, _) = tag(";")(i)?;
-            let (i, _) = space0(i)?;
-            let (i, _) = tag("charset")(i)?;
-            let (i, _) = space0(i)?;
-            let (i, _) = tag("=")(i)?;
-            let (i, _) = space0(i)?;
-            let (i, charset) = opt(alt((tag("utf-8"), tag("utf8"))))(i)?;
-            Ok((i, charset))
-        })(i)?;
-        let (i, _) = crlf(i)?;
-        Ok((i, ()))
-    })(i)?;
-
+    let (i, content_length) = parse_content_length(i)?;
+    let (i, _) = opt(parse_content_type)(i)?;
     let (i, _) = crlf(i)?;
-
     take(content_length)(i)
 }
 
