@@ -4,16 +4,10 @@ use async_codec_lite::{Decoder, Encoder};
 use tokio_util::codec::{Decoder, Encoder};
 
 use bytes::{Buf, BufMut, BytesMut};
-use nom::{
-    branch::alt,
-    bytes::streaming::{is_not, tag, take},
-    character::streaming::{crlf, digit1, space0},
-    combinator::{map_res, opt},
-};
+
 use std::{
     io::{self, Write},
     marker::PhantomData,
-    str,
 };
 use thiserror::Error;
 
@@ -37,7 +31,7 @@ pub enum ParseError {
     Encode(io::Error),
     /// Request contains invalid UTF8.
     #[error("request contains invalid UTF8: {0}")]
-    Utf8(str::Utf8Error),
+    Utf8(std::str::Utf8Error),
 }
 
 impl From<io::Error> for ParseError {
@@ -52,8 +46,8 @@ impl From<serde_json::Error> for ParseError {
     }
 }
 
-impl From<str::Utf8Error> for ParseError {
-    fn from(error: str::Utf8Error) -> Self {
+impl From<std::str::Utf8Error> for ParseError {
+    fn from(error: std::str::Utf8Error) -> Self {
         ParseError::Utf8(error)
     }
 }
@@ -134,8 +128,8 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
             return Ok(None);
         }
 
-        let (msg, len) = match parse_message(src) {
-            Ok((remaining, msg)) => (str::from_utf8(msg), src.len() - remaining.len()),
+        let (msg, len) = match parse::message(src) {
+            Ok((remaining, msg)) => (std::str::from_utf8(msg), src.len() - remaining.len()),
             Err(nom::Err::Incomplete(nom::Needed::Size(min))) => {
                 self.remaining_msg_bytes = min.get();
                 return Ok(None);
@@ -147,7 +141,7 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
             | Err(nom::Err::Error  (nom::error::Error { code, .. }))
             | Err(nom::Err::Failure(nom::error::Error { code, .. })) => loop {
                 use ParseError::*;
-                match parse_message(src) {
+                match parse::message(src) {
                     Err(_) if !src.is_empty() => src.advance(1),
                     _ => match code {
                         nom::error::ErrorKind::Digit => return Err(InvalidLength),
@@ -178,46 +172,95 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
     }
 }
 
-fn parse_content_length(input: &[u8]) -> nom::IResult<&[u8], usize> {
-    let i = input;
-    let (i, _) = tag("Content-Length")(i)?;
-    let (i, _) = space0(i)?;
-    let (i, _) = tag(":")(i)?;
-    let (i, _) = space0(i)?;
-    let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
-        str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
-    })(i)?;
-    let (i, _) = crlf(i)?;
-    Ok((i, content_length))
-}
+mod parse {
+    #![allow(unused)]
 
-fn parse_content_type(input: &[u8]) -> nom::IResult<&[u8], Option<&[u8]>> {
-    let i = input;
-    let (i, _) = tag("Content-Type")(i)?;
-    let (i, _) = space0(i)?;
-    let (i, _) = tag(":")(i)?;
-    let (i, _) = is_not(";\r")(i)?;
-    let (i, charset) = opt(|input| {
+    use nom::{
+        branch::alt,
+        bytes::streaming::{escaped, tag, take},
+        character::streaming::{crlf, digit1, multispace1, none_of, satisfy, space0},
+        combinator::{map_res, not, opt, recognize},
+        multi::{many0, many1},
+        sequence::tuple,
+    };
+
+    #[allow(unused)]
+    struct MimeType<'a> {
+        kind: &'a [u8],
+        subkind: &'a [u8],
+    }
+
+    #[allow(unused)]
+    struct Parameter<'a> {
+        attribute: &'a [u8],
+        value: &'a [u8],
+    }
+
+    const TOKEN_SPECIALS: &[char] = &[
+        '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '.', '=',
+    ];
+
+    fn content_length(input: &[u8]) -> nom::IResult<&[u8], usize> {
         let i = input;
-        let (i, _) = tag(";")(i)?;
+        let (i, _) = tag("Content-Length")(i)?;
         let (i, _) = space0(i)?;
-        let (i, _) = tag("charset")(i)?;
+        let (i, _) = tag(":")(i)?;
         let (i, _) = space0(i)?;
-        let (i, _) = tag("=")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, charset) = opt(alt((tag("utf-8"), tag("utf8"))))(i)?;
-        Ok((i, charset))
-    })(i)?;
-    let (i, _) = crlf(i)?;
-    Ok((i, charset.flatten()))
-}
+        let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
+            std::str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
+        })(i)?;
+        let (i, _) = crlf(i)?;
+        Ok((i, content_length))
+    }
 
-fn parse_message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-    let i = input;
-    let (i, content_length) = parse_content_length(i)?;
-    let (i, _) = opt(parse_content_type)(i)?;
-    let (i, _) = crlf(i)?;
-    take(content_length)(i)
+    fn content_type(input: &[u8]) -> nom::IResult<&[u8], (MimeType, Vec<Parameter>)> {
+        let i = input;
+        let (i, _) = tag("Content-Type")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, _) = tag(":")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, mimetype) = content_type_mime(i)?;
+        let (i, parameters) = many0(content_type_parameter)(i)?;
+        let (i, _) = crlf(i)?;
+        Ok((i, (mimetype, parameters)))
+    }
+
+    fn content_type_mime(input: &[u8]) -> nom::IResult<&[u8], MimeType> {
+        let i = input;
+        let (i, kind) = recognize(many1(satisfy(|c| !c.is_whitespace() && c != '/')))(i)?;
+        let (i, _) = tag("/")(i)?;
+        let (i, subkind) = recognize(many1(satisfy(|c| !c.is_whitespace() && c != ';')))(i)?;
+        Ok((i, MimeType { kind, subkind }))
+    }
+
+    fn content_type_parameter(input: &[u8]) -> nom::IResult<&[u8], Parameter> {
+        let i = input;
+        let (i, _) = tuple((space0, tag(";"), space0))(i)?;
+        let (i, attribute) = content_type_token(i)?;
+        let (i, _) = tuple((space0, tag("="), space0))(i)?;
+        let (i, value) = alt((content_type_token, content_type_quoted_string))(i)?;
+        Ok((i, Parameter { attribute, value }))
+    }
+
+    fn content_type_quoted_string(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
+        escaped(none_of("\\\""), '\\', satisfy(|c| c.is_ascii()))(input)
+    }
+
+    fn content_type_token(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
+        let i = input;
+        let (i, token) = recognize(many1(satisfy(|c| {
+            !c.is_control() && !c.is_whitespace() && !TOKEN_SPECIALS.contains(&c)
+        })))(i)?;
+        Ok((i, token))
+    }
+
+    pub fn message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
+        let i = input;
+        let (i, content_length) = content_length(i)?;
+        let (i, _) = opt(content_type)(i)?;
+        let (i, _) = crlf(i)?;
+        take(content_length)(i)
+    }
 }
 
 #[cfg(test)]
