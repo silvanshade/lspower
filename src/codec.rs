@@ -6,11 +6,9 @@ use tokio_util::codec::{Decoder, Encoder};
 use bytes::{Buf, BufMut, BytesMut};
 use nom::{
     branch::alt,
-    bytes::streaming::{is_not, tag},
-    character::streaming::{char, crlf, digit1, space0},
+    bytes::streaming::{is_not, tag, take},
+    character::streaming::{crlf, digit1, space0},
     combinator::{map_res, opt},
-    multi::length_data,
-    sequence::{delimited, terminated, tuple},
 };
 use std::{
     io::{self, Write},
@@ -181,18 +179,45 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
 }
 
 fn parse_message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-    let content_len = delimited(tag("Content-Length: "), digit1, crlf);
+    let i = input;
 
-    let utf8 = alt((tag("utf-8"), tag("utf8")));
-    let charset = tuple((char(';'), space0, tag("charset="), utf8));
-    let content_type = tuple((tag("Content-Type:"), is_not(";\r"), opt(charset), crlf));
+    let (i, content_length) = (|input| {
+        let i = input;
+        let (i, _) = tag("Content-Length")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, _) = tag(":")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
+            str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
+        })(i)?;
+        let (i, _) = crlf(i)?;
+        Ok((i, content_length))
+    })(i)?;
 
-    let header = terminated(terminated(content_len, opt(content_type)), crlf);
-    let header = map_res(header, |s: &[u8]| str::from_utf8(s));
-    let length = map_res(header, |s: &str| s.parse::<usize>());
-    let mut message = length_data(length);
+    let (i, _) = opt(|input| {
+        let i = input;
+        let (i, _) = tag("Content-Type")(i)?;
+        let (i, _) = space0(i)?;
+        let (i, _) = tag(":")(i)?;
+        let (i, _) = is_not(";\r")(i)?;
+        let (i, _) = opt(|input| {
+            let i = input;
+            let (i, _) = tag(";")(i)?;
+            let (i, _) = space0(i)?;
+            let (i, _) = tag("charset")(i)?;
+            let (i, _) = space0(i)?;
+            let (i, _) = tag("=")(i)?;
+            let (i, _) = space0(i)?;
+            let (i, charset) = opt(alt((tag("utf-8"), tag("utf8"))))(i)?;
+            Ok((i, charset))
+        })(i)?;
+        let (i, _) = crlf(i)?;
+        Ok((i, ()))
+    })(i)?;
 
-    message(input)
+    let (i, _) = crlf(i)?;
+
+    take(content_length)(i)
 }
 
 #[cfg(test)]
