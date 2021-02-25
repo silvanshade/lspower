@@ -1,20 +1,18 @@
-# lspower
-
-[![Build Status][build-badge]][build-url]
-[![Crates.io][crates-badge]][crates-url]
-[![Documentation][docs-badge]][docs-url]
-
-[build-badge]: https://github.com/rslint/lspower/workflows/rust/badge.svg
-[build-url]: https://github.com/rslint/lspower/actions
-[crates-badge]: https://img.shields.io/crates/v/lspower.svg
-[crates-url]: https://crates.io/crates/lspower
-[docs-badge]: https://docs.rs/lspower/badge.svg
-[docs-url]: https://docs.rs/lspower
-
-[Language Server Protocol] implementation for Rust based on [Tower].
-
-[Language Server Protocol]: https://microsoft.github.io/language-server-protocol
-[Tower]: https://github.com/tower-rs/tower
+<div align="center">
+  <h1><code>lspower</code></h1>
+  <p>
+    <strong>A <a href="https://microsoft.github.io/language-server-protocol">Language Server Protocol</a>
+      implementation for Rust based on <a href="https://github.com/tower-rs/tower">Tower</a></strong>
+  </p>
+  <p style="margin-bottom: 0.5ex;">
+    <a href="https://hvithrafn.github.io/lspower/lspower"><img
+        src="https://img.shields.io/badge/docs-latest-blueviolet?logo=Read-the-docs&logoColor=white" /></a>
+    <a href="https://github.com/hvithrafn/lspower/actions"><img
+        src="https://github.com/hvithrafn/lspower/workflows/main/badge.svg" /></a>
+    <!-- <a href="https://codecov.io/gh/lspower/lspower"><img
+        src="https://codecov.io/gh/lspower/lspower/branches/main/graph/badge.svg" /></a> -->
+  </p>
+</div>
 
 Tower is a simple and composable framework for implementing asynchronous
 services in Rust. Central to Tower is the [`Service`] trait, which provides the
@@ -76,6 +74,31 @@ async fn main() {
         .serve(service)
         .await;
 }
+```
+
+## Differences with tower-lsp
+
+`lspower` is a fork of the [`tower-lsp`](https://github.com/ebkalderon/tower-lsp) crate.
+
+The main differences between these crates are the following:
+
+* `lspower` is currently maintained while `tower-lsp` development seems to have stopped
+* `lspower` has had a number of small refactorings and bug-fixes since the fork
+* `lspower` does not *require* `tokio` and works with `async-std`, `smol`, `tokio`, and the `futures` executor
+* `lspower` works for WASM targets (resolving issue: [tower-lsp#187](https://github.com/ebkalderon/tower-lsp/issues/187))
+
+## Using lspower with runtimes other than tokio
+
+By default, `lspower` is configured for use with `tokio`.
+
+Using `lspower` with other runtimes requires disabling `default-features` and
+enabling the `runtime-agnostic` feature:
+
+```toml
+[dependencies.lspower]
+version = "*"
+default-features = false
+features = ["runtime-agnostic"]
 ```
 
 ## License
