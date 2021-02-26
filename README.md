@@ -29,10 +29,8 @@ Server Protocol (LSP) that makes it easy to write your own language server. It
 consists of three parts:
 
 * The `LanguageServer` trait which defines the behavior of your language server.
-* The asynchronous `LspService` delegate which wraps your language server
-  implementation and defines the behavior of the protocol.
-* A `Server` which spawns the `LspService` and processes requests and responses
-  over `stdio` or TCP.
+* The asynchronous `LspService` delegate which wraps your server implementation and defines the protocol behavior.
+* A `Server` which spawns `LspService` and processes requests/responses over `stdio` or TCP.
 
 ## Example
 
@@ -83,8 +81,9 @@ async fn main() {
 The main differences between these crates are the following:
 
 * `lspower` is currently maintained while `tower-lsp` development seems to have stopped
+* `lspower` is compatible with the current LSP spec including newer features like semantic tokens
 * `lspower` has had a number of small refactorings and bug-fixes since the fork
-* `lspower` does not *require* `tokio` and works with `async-std`, `smol`, `tokio`, and the `futures` executor
+* `lspower` does not *require* `tokio` but also works with `async-std`, `smol`, `tokio`, and plain `futures`
 * `lspower` works for WASM targets (resolving issue: [tower-lsp#187](https://github.com/ebkalderon/tower-lsp/issues/187))
 
 ## Using lspower with runtimes other than tokio
@@ -103,9 +102,8 @@ features = ["runtime-agnostic"]
 
 ## License
 
-`lspower` is free and open source software distributed under the terms of
-either the [MIT](LICENSE-MIT) or the [Apache 2.0](LICENSE-APACHE) license, at
-your option.
+`lspower` is free and open source software distributed under either the
+[MIT](LICENSE-MIT) or the [Apache 2.0](LICENSE-APACHE) license, at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
