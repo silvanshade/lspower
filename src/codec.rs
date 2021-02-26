@@ -200,6 +200,7 @@ mod parse {
         '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '.', '=',
     ];
 
+    #[inline]
     fn content_length(input: &[u8]) -> nom::IResult<&[u8], usize> {
         let i = input;
         let (i, _) = tag("Content-Length")(i)?;
@@ -213,6 +214,7 @@ mod parse {
         Ok((i, content_length))
     }
 
+    #[inline]
     fn content_type(input: &[u8]) -> nom::IResult<&[u8], (MimeType, Vec<Parameter>)> {
         let i = input;
         let (i, _) = tag("Content-Type")(i)?;
@@ -225,6 +227,7 @@ mod parse {
         Ok((i, (mimetype, parameters)))
     }
 
+    #[inline]
     fn content_type_mime(input: &[u8]) -> nom::IResult<&[u8], MimeType> {
         let i = input;
         let (i, kind) = recognize(many1(satisfy(|c| !c.is_whitespace() && c != '/')))(i)?;
@@ -233,6 +236,7 @@ mod parse {
         Ok((i, MimeType { kind, subkind }))
     }
 
+    #[inline]
     fn content_type_parameter(input: &[u8]) -> nom::IResult<&[u8], Parameter> {
         let i = input;
         let (i, _) = tuple((space0, tag(";"), space0))(i)?;
@@ -242,10 +246,12 @@ mod parse {
         Ok((i, Parameter { attribute, value }))
     }
 
+    #[inline]
     fn content_type_quoted_string(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
         escaped(none_of("\\\""), '\\', satisfy(|c| c.is_ascii()))(input)
     }
 
+    #[inline]
     fn content_type_token(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
         let i = input;
         let (i, token) = recognize(many1(satisfy(|c| {
