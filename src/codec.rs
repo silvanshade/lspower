@@ -184,6 +184,13 @@ mod parse {
         sequence::tuple,
     };
 
+    struct ContentLength(usize);
+
+    struct ContentType<'a> {
+        mime_type: MimeType<'a>,
+        parameters: Vec<Parameter<'a>>,
+    }
+
     #[allow(unused)]
     struct MimeType<'a> {
         kind: &'a [u8],
@@ -201,30 +208,30 @@ mod parse {
     ];
 
     #[inline]
-    fn content_length(input: &[u8]) -> nom::IResult<&[u8], usize> {
+    fn content_length(input: &[u8]) -> nom::IResult<&[u8], ContentLength> {
         let i = input;
         let (i, _) = tag("Content-Length")(i)?;
         let (i, _) = space0(i)?;
         let (i, _) = tag(":")(i)?;
         let (i, _) = space0(i)?;
-        let (i, content_length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
+        let (i, length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
             std::str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
         })(i)?;
         let (i, _) = crlf(i)?;
-        Ok((i, content_length))
+        Ok((i, ContentLength(length)))
     }
 
     #[inline]
-    fn content_type(input: &[u8]) -> nom::IResult<&[u8], (MimeType, Vec<Parameter>)> {
+    fn content_type(input: &[u8]) -> nom::IResult<&[u8], ContentType> {
         let i = input;
         let (i, _) = tag("Content-Type")(i)?;
         let (i, _) = space0(i)?;
         let (i, _) = tag(":")(i)?;
         let (i, _) = space0(i)?;
-        let (i, mimetype) = content_type_mime(i)?;
+        let (i, mime_type) = content_type_mime(i)?;
         let (i, parameters) = many0(content_type_parameter)(i)?;
         let (i, _) = crlf(i)?;
-        Ok((i, (mimetype, parameters)))
+        Ok((i, ContentType { mime_type, parameters }))
     }
 
     #[inline]
@@ -265,7 +272,7 @@ mod parse {
         let (i, content_length) = content_length(i)?;
         let (i, _) = opt(content_type)(i)?;
         let (i, _) = crlf(i)?;
-        take(content_length)(i)
+        take(content_length.0)(i)
     }
 }
 
