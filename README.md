@@ -9,8 +9,8 @@
         src="https://img.shields.io/badge/docs-latest-blueviolet?logo=Read-the-docs&logoColor=white" /></a>
     <a href="https://github.com/hvithrafn/lspower/actions"><img
         src="https://github.com/hvithrafn/lspower/workflows/main/badge.svg" /></a>
-    <!-- <a href="https://codecov.io/gh/lspower/lspower"><img
-        src="https://codecov.io/gh/lspower/lspower/branches/main/graph/badge.svg" /></a> -->
+    <a href="https://codecov.io/gh/lspower/lspower"><img
+        src="https://codecov.io/gh/lspower/lspower/branches/main/graph/badge.svg" /></a>
   </p>
 </div>
 
