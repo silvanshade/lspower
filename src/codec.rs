@@ -193,14 +193,14 @@ mod parse {
 
     #[allow(unused)]
     struct MimeType<'a> {
-        kind: &'a [u8],
-        subkind: &'a [u8],
+        kind: &'a str,
+        subkind: &'a str,
     }
 
     #[allow(unused)]
     struct Parameter<'a> {
-        attribute: &'a [u8],
-        value: &'a [u8],
+        attribute: &'a str,
+        value: &'a str,
     }
 
     const TOKEN_SPECIALS: &[char] = &[
@@ -237,9 +237,15 @@ mod parse {
     #[inline]
     fn content_type_mime(input: &[u8]) -> nom::IResult<&[u8], MimeType> {
         let i = input;
-        let (i, kind) = recognize(many1(satisfy(|c| !c.is_whitespace() && c != '/')))(i)?;
+        let (i, kind) = map_res(
+            recognize(many1(satisfy(|c| !c.is_whitespace() && c != '/'))),
+            std::str::from_utf8,
+        )(i)?;
         let (i, _) = tag("/")(i)?;
-        let (i, subkind) = recognize(many1(satisfy(|c| !c.is_whitespace() && c != ';')))(i)?;
+        let (i, subkind) = map_res(
+            recognize(many1(satisfy(|c| !c.is_whitespace() && c != ';'))),
+            std::str::from_utf8,
+        )(i)?;
         Ok((i, MimeType { kind, subkind }))
     }
 
@@ -247,9 +253,12 @@ mod parse {
     fn content_type_parameter(input: &[u8]) -> nom::IResult<&[u8], Parameter> {
         let i = input;
         let (i, _) = tuple((space0, tag(";"), space0))(i)?;
-        let (i, attribute) = content_type_token(i)?;
+        let (i, attribute) = map_res(content_type_token, std::str::from_utf8)(i)?;
         let (i, _) = tuple((space0, tag("="), space0))(i)?;
-        let (i, value) = alt((content_type_token, content_type_quoted_string))(i)?;
+        let (i, value) = map_res(
+            alt((content_type_token, content_type_quoted_string)),
+            std::str::from_utf8,
+        )(i)?;
         Ok((i, Parameter { attribute, value }))
     }
 
@@ -270,7 +279,7 @@ mod parse {
     pub fn message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
         let i = input;
         let (i, content_length) = content_length(i)?;
-        let (i, _) = opt(content_type)(i)?;
+        let (i, content_type) = opt(content_type)(i)?;
         let (i, _) = crlf(i)?;
         take(content_length.0)(i)
     }
