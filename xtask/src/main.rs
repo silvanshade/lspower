@@ -19,9 +19,10 @@ SUBCOMMANDS:
     clippy
     doc
     format
-    help                Prints this message or the help of the given subcommand(s)
-    install
+    help                Prints this message or the help of the subcommand(s)
+    tarpaulin
     test
+    udeps
 "#
     .trim();
 
@@ -38,49 +39,32 @@ SUBCOMMANDS:
     };
 
     let mut args = pico_args::Arguments::from_vec(args);
-    match args.subcommand()?.as_deref() {
-        Some("build") => {
-            subcommand::cargo::build(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some("check") => {
-            subcommand::cargo::check(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some("clippy") => {
-            subcommand::cargo::clippy(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some("doc") => {
-            subcommand::cargo::doc(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some("format") => {
-            subcommand::cargo::format(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some("help") => {
-            println!("{}\n", help);
-            return Ok(());
-        },
-        Some("test") => {
-            subcommand::cargo::test(args, &cargo_args)?;
-            return Ok(());
-        },
-        Some(subcommand) => {
-            return Err(format!("unknown subcommand: {}", subcommand).into());
-        },
+
+    let result = match args.subcommand()?.as_deref() {
         None => {
             if args.contains(["-h", "--help"]) {
                 println!("{}\n", help);
-                return Ok(());
             }
+            Ok(())
         },
-    }
+        Some("build") => subcommand::cargo::build(&mut args, cargo_args),
+        Some("check") => subcommand::cargo::check(&mut args, cargo_args),
+        Some("clippy") => subcommand::cargo::clippy(&mut args, cargo_args),
+        Some("doc") => subcommand::cargo::doc(&mut args, cargo_args),
+        Some("format") => subcommand::cargo::format(&mut args, cargo_args),
+        Some("tarpaulin") => subcommand::cargo::tarpaulin(&mut args, cargo_args),
+        Some("test") => subcommand::cargo::test(&mut args, cargo_args),
+        Some("udeps") => subcommand::cargo::udeps(&mut args, cargo_args),
+        Some("help") => {
+            println!("{}\n", help);
+            Ok(())
+        },
+        Some(subcommand) => Err(format!("unknown subcommand: {}", subcommand).into()),
+    };
+    crate::util::handle_result(result);
 
-    if let Err(pico_args::Error::UnusedArgsLeft(args)) = args.finish() {
-        return Err(format!("unrecognized arguments: {}", args.join(" ")).into());
-    }
+    let result = crate::util::handle_unused(&args);
+    crate::util::handle_result(result);
 
     Ok(())
 }
@@ -108,7 +92,7 @@ mod subcommand {
         use crate::metadata;
         use std::process::Command;
 
-        pub fn build(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn build(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-build
 
@@ -126,6 +110,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -136,7 +122,7 @@ FLAGS:
             Ok(())
         }
 
-        pub fn check(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn check(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-check
 
@@ -154,6 +140,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -166,7 +154,7 @@ FLAGS:
             Ok(())
         }
 
-        pub fn clippy(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn clippy(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-clippy
 
@@ -184,6 +172,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -196,7 +186,7 @@ FLAGS:
             Ok(())
         }
 
-        pub fn doc(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn doc(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-doc
 
@@ -214,6 +204,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -223,7 +215,7 @@ FLAGS:
             Ok(())
         }
 
-        pub fn format(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn format(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-format
 
@@ -241,6 +233,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -250,7 +244,40 @@ FLAGS:
             Ok(())
         }
 
-        pub fn test(mut args: pico_args::Arguments, cargo_args: &[std::ffi::OsString]) -> crate::Fallible<()> {
+        pub fn tarpaulin(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
+            let help = r#"
+xtask-tarpaulin
+
+USAGE:
+    xtask tarpaulin
+
+FLAGS:
+    -h, --help          Prints help information
+    -- '...'            Extra arguments to pass to the cargo command
+"#
+            .trim();
+
+            if args.contains(["-h", "--help"]) {
+                println!("{}\n", help);
+                return Ok(());
+            }
+
+            crate::util::handle_unused(args)?;
+
+            let cargo = metadata::cargo()?;
+            let mut cmd = Command::new(cargo);
+            cmd.current_dir(metadata::project_root());
+            cmd.args(&["+nightly", "tarpaulin"]);
+            cmd.args(&["--out", "Xml"]);
+            cmd.args(&["--packages", "xtask", "lspower"]);
+            cmd.args(&["--exclude-files", "xtask", "lspower-macros"]);
+            cmd.args(cargo_args);
+            cmd.status()?;
+
+            Ok(())
+        }
+
+        pub fn test(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
             let help = r#"
 xtask-test
 
@@ -268,6 +295,8 @@ FLAGS:
                 return Ok(());
             }
 
+            crate::util::handle_unused(args)?;
+
             let cargo = metadata::cargo()?;
             let mut cmd = Command::new(cargo);
             cmd.current_dir(metadata::project_root());
@@ -278,6 +307,62 @@ FLAGS:
             cmd.args(cargo_args);
             cmd.status()?;
 
+            Ok(())
+        }
+
+        pub fn udeps(args: &mut pico_args::Arguments, cargo_args: Vec<std::ffi::OsString>) -> crate::Fallible<()> {
+            let help = r#"
+xtask-udep
+
+USAGE:
+    xtask udeps
+
+FLAGS:
+    -h, --help          Prints help information
+    -- '...'            Extra arguments to pass to the cargo command
+"#
+            .trim();
+
+            if args.contains(["-h", "--help"]) {
+                println!("{}\n", help);
+                return Ok(());
+            }
+
+            crate::util::handle_unused(args)?;
+
+            let cargo = metadata::cargo()?;
+            let mut cmd = Command::new(cargo);
+            cmd.current_dir(metadata::project_root());
+            cmd.args(&["+nightly", "udeps"]);
+            cmd.args(&["--all-targets"]);
+            cmd.args(&["--package", "lspower"]);
+            cmd.args(cargo_args);
+            cmd.status()?;
+
+            Ok(())
+        }
+    }
+}
+
+mod util {
+    pub(super) fn handle_result<T>(result: crate::Fallible<T>) {
+        if let Err(err) = result {
+            println!("Error :: {}", err);
+            std::process::exit(1);
+        }
+    }
+
+    pub(super) fn handle_unused(args: &pico_args::Arguments) -> crate::Fallible<()> {
+        use std::borrow::Borrow;
+        let unused = args.clone().finish();
+        if !unused.is_empty() {
+            let mut message = String::new();
+            for str in unused {
+                message.push(' ');
+                message.push_str(str.to_string_lossy().borrow());
+            }
+            Err(format!("unrecognized arguments '{}'", message).into())
+        } else {
             Ok(())
         }
     }
