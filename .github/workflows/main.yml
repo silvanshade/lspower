@@ -149,10 +149,11 @@ jobs:
           command: install
           args: --root ${{ runner.tool_cache }}/cargo-tarpaulin --force cargo-tarpaulin
       - run: echo "${{ runner.tool_cache }}/cargo-tarpaulin/bin" >> $GITHUB_PATH
-      - name: Run cargo tarpaulin
+      - name: Run cargo xtask tarpaulin
         uses: actions-rs/cargo@v1
         with:
-          command: tarpaulin
+          command: xtask
+          args: tarpaulin
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1
         with:
