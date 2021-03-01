@@ -197,6 +197,12 @@ mod parse {
         subkind: &'a str,
     }
 
+    impl<'a> std::fmt::Display for MimeType<'a> {
+        fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(fmt, "{}/{}", self.kind, self.subkind)
+        }
+    }
+
     #[allow(unused)]
     struct Parameter<'a> {
         attribute: &'a str,
