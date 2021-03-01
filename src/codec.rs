@@ -15,22 +15,22 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ParseError {
     /// Failed to parse the JSON body.
-    #[error("unable to parse JSON body: {0}")]
+    #[error("failed to parse JSON body: {0}")]
     Body(serde_json::Error),
     /// Failed to encode the response.
     #[error("failed to encode response: {0}")]
     Encode(io::Error),
     /// The length value in the `Content-Length` header is invalid.
-    #[error("unable to parse content length")]
+    #[error("invalid content length value")]
     InvalidLength,
     /// The media type in the `Content-Type` header is invalid.
-    #[error("unable to parse content length")]
+    #[error("invalid content type value")]
     InvalidType,
     /// Request lacks the required `Content-Length` header.
     #[error("missing required `Content-Length` header")]
     MissingHeader,
     /// Request contains invalid UTF8.
-    #[error("request contains invalid UTF8: {0}")]
+    #[error("request contains invalid UTF-8: {0}")]
     Utf8(std::str::Utf8Error),
 }
 
