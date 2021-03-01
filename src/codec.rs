@@ -291,6 +291,23 @@ mod parse {
         let (i, content_length) = content_length(i)?;
         let (i, content_type) = opt(content_type)(i)?;
         let (i, _) = crlf(i)?;
+        #[cfg(debug_assertions)]
+        if let Some(ContentType { mime_type, parameters }) = content_type {
+            if mime_type.kind != "application" || mime_type.subkind != "vscode-jsonrpc" {
+                log::warn!(
+                    "Expected MIME type: \"application/vscode-jsonrpc\"; Actual MIME type: \"{}\"",
+                    mime_type
+                );
+            }
+            if let Some(parameter) = parameters.iter().find(|p| p.attribute == "charset") {
+                if !["utf-8", "utf8"].contains(&parameter.value) {
+                    log::warn!(
+                        "Expected \"charset\" value: \"utf-8\"; Actual \"charset\" value: \"{}\"",
+                        parameter.value
+                    );
+                }
+            }
+        }
         take(content_length.0)(i)
     }
 }
