@@ -286,12 +286,8 @@ mod parse {
         Ok((i, token))
     }
 
-    pub fn message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-        let i = input;
-        let (i, content_length) = content_length(i)?;
-        let (i, content_type) = opt(content_type)(i)?;
-        let (i, _) = crlf(i)?;
-        #[cfg(debug_assertions)]
+    #[inline]
+    fn content_type_validate(content_type: &Option<ContentType>) {
         if let Some(ContentType { mime_type, parameters }) = content_type {
             if mime_type.kind != "application" || mime_type.subkind != "vscode-jsonrpc" {
                 log::warn!(
@@ -308,6 +304,15 @@ mod parse {
                 }
             }
         }
+    }
+
+    pub fn message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
+        let i = input;
+        let (i, content_length) = content_length(i)?;
+        let (i, content_type) = opt(content_type)(i)?;
+        let (i, _) = crlf(i)?;
+        #[cfg(debug_assertions)]
+        content_type_validate(&content_type);
         take(content_length.0)(i)
     }
 }
