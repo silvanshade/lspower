@@ -178,7 +178,7 @@ mod parse {
     use nom::{
         branch::alt,
         bytes::streaming::{escaped, tag, take},
-        character::streaming::{crlf, digit1, multispace1, none_of, satisfy, space0},
+        character::streaming::{char, crlf, digit1, multispace1, none_of, satisfy, space0},
         combinator::{map_res, not, opt, recognize},
         multi::{many0, many1},
         sequence::tuple,
@@ -270,7 +270,11 @@ mod parse {
 
     #[inline]
     fn content_type_quoted_string(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-        escaped(none_of("\\\""), '\\', satisfy(|c| c.is_ascii()))(input)
+        recognize(tuple((
+            char('"'),
+            escaped(none_of("\\\""), '\\', satisfy(|c| c.is_ascii())),
+            char('"'),
+        )))(input)
     }
 
     #[inline]
@@ -319,7 +323,8 @@ mod tests {
     fn decodes_optional_content_type() {
         let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
         let content_len = format!("Content-Length: {}", decoded.len());
-        let content_type = "Content-Type: application/vscode-jsonrpc; charset=utf-8".to_string();
+        let content_type =
+            "Content-Type: application/vscode-jsonrpc; charset=utf-8; foo=\"bar\\nbaz\\\"qux\\\"\"".to_string();
         let encoded = format!("{}\r\n{}\r\n\r\n{}", content_len, content_type, decoded);
 
         let mut codec = LanguageServerCodec::default();
