@@ -14,21 +14,21 @@ use thiserror::Error;
 /// Errors that can occur when processing an LSP request.
 #[derive(Debug, Error)]
 pub enum ParseError {
-    /// Request lacks the required `Content-Length` header.
-    #[error("missing required `Content-Length` header")]
-    MissingHeader,
-    /// The length value in the `Content-Length` header is invalid.
-    #[error("unable to parse content length")]
-    InvalidLength,
-    /// The media type in the `Content-Type` header is invalid.
-    #[error("unable to parse content length")]
-    InvalidType,
     /// Failed to parse the JSON body.
     #[error("unable to parse JSON body: {0}")]
     Body(serde_json::Error),
     /// Failed to encode the response.
     #[error("failed to encode response: {0}")]
     Encode(io::Error),
+    /// The length value in the `Content-Length` header is invalid.
+    #[error("unable to parse content length")]
+    InvalidLength,
+    /// The media type in the `Content-Type` header is invalid.
+    #[error("unable to parse content length")]
+    InvalidType,
+    /// Request lacks the required `Content-Length` header.
+    #[error("missing required `Content-Length` header")]
+    MissingHeader,
     /// Request contains invalid UTF8.
     #[error("request contains invalid UTF8: {0}")]
     Utf8(std::str::Utf8Error),
