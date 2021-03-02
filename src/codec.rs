@@ -155,15 +155,9 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
         }
 
         if content_len.is_none() || http_error.is_some() {
-            let offset = {
-                let text = std::str::from_utf8(src)?;
-                if let [fst, ..] = suffix::SuffixTable::new(text).positions("Content-Length") {
-                    *fst as usize
-                } else {
-                    0
-                }
-            };
-            src.advance(offset);
+            if let Some(offset) = twoway::find_bytes(src, b"Content-Length") {
+                src.advance(offset);
+            }
             if let Some(http_error) = http_error {
                 return Err(ParseError::Httparse(http_error));
             } else {
