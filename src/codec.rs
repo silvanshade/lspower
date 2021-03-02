@@ -192,7 +192,9 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
 
             // First, ensure that the source bytes is long enough for us to decode the full content ...
             if src.len() < delta {
-                // ... otherwise return None and wait for more input
+                // ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)
+                self.remaining_msg_bytes = delta - src.len();
+                // ... then return None and wait for more input
                 return Ok(None);
             } else {
                 let msg = &src[headers_len .. delta];
