@@ -151,7 +151,16 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                         if header.name == "Content-Length" {
                             let value = std::str::from_utf8(header.value)?;
                             let value = value.parse::<usize>().map_err(|_| ParseError::InvalidLength)?;
-                            content_len = Some(value);
+                            let delta = offset + value;
+                            // Ensure that the source bytes is long enough for us to decode the full content ...
+                            if src.len() < delta {
+                                // ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)
+                                self.remaining_msg_bytes = delta - src.len();
+                                // ... then return None and wait for more input
+                                return Ok(None);
+                            } else {
+                                content_len = Some(value);
+                            }
                         }
                     }
                 },
@@ -189,23 +198,12 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
         // The result of parsing the content
         let result = if let (Some(headers_len), Some(content_len)) = (headers_len, content_len) {
             delta = headers_len + content_len;
-
-            // First, ensure that the source bytes is long enough for us to decode the full content ...
-            if src.len() < delta {
-                // ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)
-                self.remaining_msg_bytes = delta - src.len();
-                // ... then return None and wait for more input
-                return Ok(None);
-            } else {
-                let msg = &src[headers_len .. delta];
-                let msg = std::str::from_utf8(msg)?;
-
-                log::trace!("<- {}", msg);
-
-                match serde_json::from_str(msg) {
-                    Ok(parsed) => Ok(Some(parsed)),
-                    Err(err) => Err(err.into()),
-                }
+            let msg = &src[headers_len .. delta];
+            let msg = std::str::from_utf8(msg)?;
+            log::trace!("<- {}", msg);
+            match serde_json::from_str(msg) {
+                Ok(parsed) => Ok(Some(parsed)),
+                Err(err) => Err(err.into()),
             }
         } else {
             unreachable!()
