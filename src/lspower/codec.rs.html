@@ -246,6 +246,7 @@
 <span id="243">243</span>
 <span id="244">244</span>
 <span id="245">245</span>
+<span id="246">246</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">async_codec_lite</span>::{<span class="ident">Decoder</span>, <span class="ident">Encoder</span>};
@@ -404,8 +405,9 @@
         }
 
         <span class="kw">if</span> <span class="ident">content_len</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">http_error</span>.<span class="ident">is_some</span>() {
-            <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">twoway</span>::<span class="ident">find_bytes</span>(<span class="ident">src</span>, <span class="string">b&quot;Content-Length&quot;</span>).<span class="ident">unwrap_or_default</span>();
-            <span class="ident">src</span>.<span class="ident">advance</span>(<span class="ident">offset</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">offset</span>) <span class="op">=</span> <span class="ident">twoway</span>::<span class="ident">find_bytes</span>(<span class="ident">src</span>, <span class="string">b&quot;Content-Length&quot;</span>) {
+                <span class="ident">src</span>.<span class="ident">advance</span>(<span class="ident">offset</span>);
+            }
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">http_error</span>) <span class="op">=</span> <span class="ident">http_error</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParseError</span>::<span class="ident">Httparse</span>(<span class="ident">http_error</span>));
             } <span class="kw">else</span> {
