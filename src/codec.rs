@@ -20,12 +20,12 @@ pub enum ParseError {
     /// Failed to encode the response.
     #[error("failed to encode response: {0}")]
     Encode(io::Error),
+    /// Failed to parse headers.
+    #[error("failed to parse headers: {0}")]
+    Httparse(httparse::Error),
     /// The length value in the `Content-Length` header is invalid.
     #[error("invalid content length value")]
     InvalidLength,
-    /// The media type in the `Content-Type` header is invalid.
-    #[error("invalid content type value")]
-    InvalidType,
     /// Request lacks the required `Content-Length` header.
     #[error("missing required `Content-Length` header")]
     MissingHeader,
@@ -128,192 +128,67 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
             return Ok(None);
         }
 
-        let (msg, len) = match parse::message(src) {
-            Ok((remaining, msg)) => (std::str::from_utf8(msg), src.len() - remaining.len()),
-            Err(nom::Err::Incomplete(nom::Needed::Size(min))) => {
-                self.remaining_msg_bytes = min.get();
-                return Ok(None);
-            },
-            Err(nom::Err::Incomplete(_)) => {
-                return Ok(None);
-            },
-            #[rustfmt::skip]
-            | Err(nom::Err::Error  (nom::error::Error { code, .. }))
-            | Err(nom::Err::Failure(nom::error::Error { code, .. })) => loop {
-                use ParseError::*;
-                match parse::message(src) {
-                    Err(_) if !src.is_empty() => src.advance(1),
-                    _ => match code {
-                        nom::error::ErrorKind::Digit => return Err(InvalidLength),
-                        nom::error::ErrorKind::MapRes => return Err(InvalidLength),
-                        nom::error::ErrorKind::Char => return Err(InvalidType),
-                        nom::error::ErrorKind::IsNot => return Err(InvalidType),
-                        _ => return Err(MissingHeader),
-                    },
+        let mut http_error = None;
+        let mut content_len = None;
+        let mut headers_len = None;
+
+        {
+            let dst = &mut [httparse::EMPTY_HEADER; 2];
+            match httparse::parse_headers(src, dst) {
+                Ok(httparse::Status::Complete((offset, headers))) => {
+                    headers_len = Some(offset);
+                    for header in headers {
+                        if header.name == "Content-Length" {
+                            let value = std::str::from_utf8(header.value)?;
+                            let value = value.parse::<usize>().map_err(|_| ParseError::InvalidLength)?;
+                            content_len = Some(value);
+                        }
+                    }
+                },
+                Ok(httparse::Status::Partial) => {
+                    return Ok(None);
+                },
+                Err(error) => {
+                    http_error = Some(error);
+                },
+            }
+        }
+
+        if content_len.is_none() || http_error.is_some() {
+            let offset = {
+                let text = std::str::from_utf8(src)?;
+                if let [fst, ..] = suffix::SuffixTable::new(text).positions("Content-Length") {
+                    *fst as usize
+                } else {
+                    0
                 }
-            },
+            };
+            src.advance(offset);
+            if let Some(http_error) = http_error {
+                return Err(ParseError::Httparse(http_error));
+            } else {
+                return Err(ParseError::MissingHeader);
+            }
+        }
+
+        let delta;
+        let result = if let (Some(headers_len), Some(content_len)) = (headers_len, content_len) {
+            delta = headers_len + content_len;
+            let msg = &src[headers_len .. delta];
+            let msg = std::str::from_utf8(msg)?;
+            log::trace!("<- {}", msg);
+            match serde_json::from_str(msg) {
+                Ok(parsed) => Ok(Some(parsed)),
+                Err(err) => Err(err.into()),
+            }
+        } else {
+            unreachable!()
         };
 
-        let result = match msg {
-            Err(err) => Err(err.into()),
-            Ok(msg) => {
-                log::trace!("<- {}", msg);
-                match serde_json::from_str(msg) {
-                    Ok(parsed) => Ok(Some(parsed)),
-                    Err(err) => Err(err.into()),
-                }
-            },
-        };
-
-        src.advance(len);
+        src.advance(delta);
         self.remaining_msg_bytes = 0;
 
         result
-    }
-}
-
-mod parse {
-    #![allow(unused)]
-
-    use nom::{
-        branch::alt,
-        bytes::streaming::{escaped, tag, take},
-        character::streaming::{char, crlf, digit1, multispace1, none_of, satisfy, space0},
-        combinator::{map_res, not, opt, recognize},
-        multi::{many0, many1},
-        sequence::tuple,
-    };
-
-    struct ContentLength(usize);
-
-    struct ContentType<'a> {
-        mime_type: MimeType<'a>,
-        parameters: Vec<Parameter<'a>>,
-    }
-
-    #[allow(unused)]
-    struct MimeType<'a> {
-        kind: &'a str,
-        subkind: &'a str,
-    }
-
-    impl<'a> std::fmt::Display for MimeType<'a> {
-        fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
-            write!(fmt, "{}/{}", self.kind, self.subkind)
-        }
-    }
-
-    #[allow(unused)]
-    struct Parameter<'a> {
-        attribute: &'a str,
-        value: &'a str,
-    }
-
-    const TOKEN_SPECIALS: &[char] = &[
-        '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '.', '=',
-    ];
-
-    #[inline]
-    fn content_length(input: &[u8]) -> nom::IResult<&[u8], ContentLength> {
-        let i = input;
-        let (i, _) = tag("Content-Length")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, _) = tag(":")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, length) = map_res(digit1, |s| -> Result<_, Box<dyn std::error::Error>> {
-            std::str::from_utf8(s)?.parse::<usize>().map_err(Into::into)
-        })(i)?;
-        let (i, _) = crlf(i)?;
-        Ok((i, ContentLength(length)))
-    }
-
-    #[inline]
-    fn content_type(input: &[u8]) -> nom::IResult<&[u8], ContentType> {
-        let i = input;
-        let (i, _) = tag("Content-Type")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, _) = tag(":")(i)?;
-        let (i, _) = space0(i)?;
-        let (i, mime_type) = content_type_mime(i)?;
-        let (i, parameters) = many0(content_type_parameter)(i)?;
-        let (i, _) = crlf(i)?;
-        Ok((i, ContentType { mime_type, parameters }))
-    }
-
-    #[inline]
-    fn content_type_mime(input: &[u8]) -> nom::IResult<&[u8], MimeType> {
-        let i = input;
-        let (i, kind) = map_res(
-            recognize(many1(satisfy(|c| !c.is_whitespace() && c != '/'))),
-            std::str::from_utf8,
-        )(i)?;
-        let (i, _) = tag("/")(i)?;
-        let (i, subkind) = map_res(
-            recognize(many1(satisfy(|c| !c.is_whitespace() && c != ';'))),
-            std::str::from_utf8,
-        )(i)?;
-        Ok((i, MimeType { kind, subkind }))
-    }
-
-    #[inline]
-    fn content_type_parameter(input: &[u8]) -> nom::IResult<&[u8], Parameter> {
-        let i = input;
-        let (i, _) = tuple((space0, tag(";"), space0))(i)?;
-        let (i, attribute) = map_res(content_type_token, std::str::from_utf8)(i)?;
-        let (i, _) = tuple((space0, tag("="), space0))(i)?;
-        let (i, value) = map_res(
-            alt((content_type_token, content_type_quoted_string)),
-            std::str::from_utf8,
-        )(i)?;
-        Ok((i, Parameter { attribute, value }))
-    }
-
-    #[inline]
-    fn content_type_quoted_string(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-        recognize(tuple((
-            char('"'),
-            escaped(none_of("\\\""), '\\', satisfy(|c| c.is_ascii())),
-            char('"'),
-        )))(input)
-    }
-
-    #[inline]
-    fn content_type_token(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-        let i = input;
-        let (i, token) = recognize(many1(satisfy(|c| {
-            !c.is_control() && !c.is_whitespace() && !TOKEN_SPECIALS.contains(&c)
-        })))(i)?;
-        Ok((i, token))
-    }
-
-    #[inline]
-    fn content_type_validate(content_type: &Option<ContentType>) {
-        if let Some(ContentType { mime_type, parameters }) = content_type {
-            if mime_type.kind != "application" || mime_type.subkind != "vscode-jsonrpc" {
-                log::warn!(
-                    "Expected MIME type: \"application/vscode-jsonrpc\"; Actual MIME type: \"{}\"",
-                    mime_type
-                );
-            }
-            if let Some(parameter) = parameters.iter().find(|p| p.attribute == "charset") {
-                if !["utf-8", "utf8"].contains(&parameter.value) {
-                    log::warn!(
-                        "Expected \"charset\" value: \"utf-8\"; Actual \"charset\" value: \"{}\"",
-                        parameter.value
-                    );
-                }
-            }
-        }
-    }
-
-    pub fn message(input: &[u8]) -> nom::IResult<&[u8], &[u8]> {
-        let i = input;
-        let (i, content_length) = content_length(i)?;
-        let (i, content_type) = opt(content_type)(i)?;
-        let (i, _) = crlf(i)?;
-        #[cfg(debug_assertions)]
-        content_type_validate(&content_type);
-        take(content_length.0)(i)
     }
 }
 
