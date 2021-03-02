@@ -277,8 +277,6 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">async_codec_lite</span>::{<span class="ident">Decoder</span>, <span class="ident">Encoder</span>};
@@ -433,7 +431,16 @@
                         <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;Content-Length&quot;</span> {
                             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="ident">header</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
                             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ParseError</span>::<span class="ident">InvalidLength</span>)<span class="question-mark">?</span>;
-                            <span class="ident">content_len</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
+                            <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">value</span>;
+                            <span class="comment">// Ensure that the source bytes is long enough for us to decode the full content ...</span>
+                            <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">delta</span> {
+                                <span class="comment">// ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)</span>
+                                <span class="self">self</span>.<span class="ident">remaining_msg_bytes</span> <span class="op">=</span> <span class="ident">delta</span> <span class="op">-</span> <span class="ident">src</span>.<span class="ident">len</span>();
+                                <span class="comment">// ... then return None and wait for more input</span>
+                                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                            } <span class="kw">else</span> {
+                                <span class="ident">content_len</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
+                            }
                         }
                     }
                 },
@@ -471,23 +478,12 @@
         <span class="comment">// The result of parsing the content</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">headers_len</span>), <span class="prelude-val">Some</span>(<span class="ident">content_len</span>)) <span class="op">=</span> (<span class="ident">headers_len</span>, <span class="ident">content_len</span>) {
             <span class="ident">delta</span> <span class="op">=</span> <span class="ident">headers_len</span> <span class="op">+</span> <span class="ident">content_len</span>;
-
-            <span class="comment">// First, ensure that the source bytes is long enough for us to decode the full content ...</span>
-            <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">delta</span> {
-                <span class="comment">// ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)</span>
-                <span class="self">self</span>.<span class="ident">remaining_msg_bytes</span> <span class="op">=</span> <span class="ident">delta</span> <span class="op">-</span> <span class="ident">src</span>.<span class="ident">len</span>();
-                <span class="comment">// ... then return None and wait for more input</span>
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">headers_len</span> .. <span class="ident">delta</span>];
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="ident">msg</span>)<span class="question-mark">?</span>;
-
-                <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;&lt;- {}&quot;</span>, <span class="ident">msg</span>);
-
-                <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="ident">msg</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">parsed</span>)),
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>()),
-                }
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">headers_len</span> .. <span class="ident">delta</span>];
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="ident">msg</span>)<span class="question-mark">?</span>;
+            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;&lt;- {}&quot;</span>, <span class="ident">msg</span>);
+            <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="ident">msg</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">parsed</span>)),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>()),
             }
         } <span class="kw">else</span> {
             <span class="macro">unreachable</span><span class="macro">!</span>()
