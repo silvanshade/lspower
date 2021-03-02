@@ -277,6 +277,8 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">async_codec_lite</span>::{<span class="ident">Decoder</span>, <span class="ident">Encoder</span>};
@@ -472,7 +474,9 @@
 
             <span class="comment">// First, ensure that the source bytes is long enough for us to decode the full content ...</span>
             <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">delta</span> {
-                <span class="comment">// ... otherwise return None and wait for more input</span>
+                <span class="comment">// ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)</span>
+                <span class="self">self</span>.<span class="ident">remaining_msg_bytes</span> <span class="op">=</span> <span class="ident">delta</span> <span class="op">-</span> <span class="ident">src</span>.<span class="ident">len</span>();
+                <span class="comment">// ... then return None and wait for more input</span>
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">headers_len</span> .. <span class="ident">delta</span>];
