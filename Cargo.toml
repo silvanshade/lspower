@@ -2,7 +2,7 @@
 edition = "2018"
 name = "lspower"
 version = "0.7.0"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
+authors = ["hvithrafn <hvithrafn@users.noreply.github.com>", "Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/hvithrafn/lspower"
 documentation = "https://docs.rs/lspower/"
