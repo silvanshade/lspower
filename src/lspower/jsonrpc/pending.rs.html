@@ -414,7 +414,7 @@
             <span class="kw">let</span> <span class="ident">pending</span> <span class="op">=</span> <span class="ident">ClientRequests</span>::<span class="ident">new</span>();
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">1</span>);
             <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="ident">pending</span>.<span class="ident">wait</span>(<span class="ident">id</span>.<span class="ident">clone</span>()));
-            <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="ident">pending</span>.<span class="ident">wait</span>(<span class="ident">id</span>.<span class="ident">clone</span>()));
+            <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="ident">pending</span>.<span class="ident">wait</span>(<span class="ident">id</span>));
         }
 
         <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
@@ -435,8 +435,8 @@
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unbalanced_insert</span>() {
             <span class="kw">let</span> <span class="ident">pending</span> <span class="op">=</span> <span class="ident">ClientRequests</span>::<span class="ident">new</span>();
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">1</span>);
-            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="macro">json</span><span class="macro">!</span>({}));
-            <span class="ident">pending</span>.<span class="ident">insert</span>(<span class="ident">expected</span>.<span class="ident">clone</span>());
+            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="macro">json</span><span class="macro">!</span>({}));
+            <span class="ident">pending</span>.<span class="ident">insert</span>(<span class="ident">expected</span>);
         }
     }
 
