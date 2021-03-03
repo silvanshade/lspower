@@ -132,49 +132,129 @@ impl Debug for ClientRequests {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
-    use std::time::Duration;
-
     use super::*;
 
-    #[tokio::test]
-    async fn executes_server_request() {
-        let pending = ServerRequests::new();
+    mod client_requests {
+        use super::*;
+        use serde_json::json;
 
-        let id = Id::Number(1);
-        let response = pending.execute(id.clone(), async { Ok(json!({})) }).await;
+        #[test]
+        fn debug() {
+            let client_requests = ClientRequests::new();
+            format!("{:?}", client_requests);
+        }
 
-        assert_eq!(response, Response::ok(id, json!({})));
+        #[tokio::test]
+        #[should_panic]
+        async fn wait_current() {
+            let pending = ClientRequests::new();
+            let id = Id::Number(1);
+            tokio::spawn(pending.wait(id.clone()));
+            tokio::spawn(pending.wait(id.clone()));
+        }
+
+        #[tokio::test]
+        async fn wait_insert() {
+            let pending = ClientRequests::new();
+
+            let id = Id::Number(1);
+            let wait_fut = tokio::spawn(pending.wait(id.clone()));
+
+            let expected = Response::ok(id.clone(), json!({}));
+            pending.insert(expected.clone());
+
+            let actual = wait_fut.await.expect("task panicked");
+            assert_eq!(expected, actual);
+        }
+
+        #[tokio::test]
+        async fn unbalanced_insert() {
+            let pending = ClientRequests::new();
+            let id = Id::Number(1);
+            let expected = Response::ok(id.clone(), json!({}));
+            pending.insert(expected.clone());
+        }
     }
 
-    #[tokio::test]
-    async fn cancels_server_request() {
-        let pending = ServerRequests::new();
+    mod server_requests {
+        use super::*;
+        use serde_json::json;
+        use std::time::Duration;
 
-        let id = Id::Number(1);
-        let handler_fut = tokio::spawn(pending.execute(id.clone(), async {
-            tokio::time::sleep(Duration::from_secs(50)).await;
-            Ok(json!({}))
-        }));
+        #[test]
+        fn debug() {
+            let server_requests = ServerRequests::new();
+            format!("{:?}", server_requests);
+        }
 
-        tokio::time::sleep(Duration::from_millis(30)).await;
-        pending.cancel(&id);
+        #[tokio::test]
+        async fn execute() {
+            let pending = ServerRequests::new();
 
-        let res = handler_fut.await.expect("task panicked");
-        assert_eq!(res, Response::error(Some(id), Error::request_cancelled()));
-    }
+            let id = Id::Number(1);
+            let response = pending.execute(id.clone(), async { Ok(json!({})) }).await;
 
-    #[tokio::test]
-    async fn waits_for_client_response() {
-        let pending = ClientRequests::new();
+            assert_eq!(response, Response::ok(id, json!({})));
+        }
 
-        let id = Id::Number(1);
-        let wait_fut = tokio::spawn(pending.wait(id.clone()));
+        #[tokio::test]
+        async fn execute_concurrent() {
+            let pending = ServerRequests::new();
+            let id = Id::Number(1);
+            let fut0 = pending.execute(id.clone(), async { Ok(json!({})) });
+            let fut1 = pending.execute(id.clone(), async { Ok(json!({})) });
+            assert_eq!(fut0.await, Response::ok(id.clone(), json!({})));
+            assert_eq!(fut1.await, Response::error(Some(id.clone()), Error::invalid_request()));
+        }
 
-        let expected = Response::ok(id.clone(), json!({}));
-        pending.insert(expected.clone());
+        #[tokio::test]
+        async fn cancel() {
+            let pending = ServerRequests::new();
 
-        let actual = wait_fut.await.expect("task panicked");
-        assert_eq!(expected, actual);
+            let id = Id::Number(1);
+            let handler_fut = tokio::spawn(pending.execute(id.clone(), async {
+                tokio::time::sleep(Duration::from_secs(50)).await;
+                Ok(json!({}))
+            }));
+
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            pending.cancel(&id);
+
+            let res = handler_fut.await.expect("task panicked");
+            assert_eq!(res, Response::error(Some(id), Error::request_cancelled()));
+        }
+
+        #[tokio::test]
+        async fn cancel_non_existent() {
+            let pending = ServerRequests::new();
+            let id = Id::Number(1);
+            pending.cancel(&id);
+        }
+
+        #[tokio::test]
+        async fn cancel_all() {
+            let pending = ServerRequests::new();
+
+            let id1 = Id::Number(1);
+            let handler_fut1 = tokio::spawn(pending.execute(id1.clone(), async {
+                tokio::time::sleep(Duration::from_secs(50)).await;
+                Ok(json!({}))
+            }));
+
+            let id2 = Id::Number(2);
+            let handler_fut2 = tokio::spawn(pending.execute(id2.clone(), async {
+                tokio::time::sleep(Duration::from_secs(50)).await;
+                Ok(json!({}))
+            }));
+
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            pending.cancel_all();
+
+            let res1 = handler_fut1.await.expect("task panicked");
+            assert_eq!(res1, Response::error(Some(id1), Error::request_cancelled()));
+
+            let res2 = handler_fut2.await.expect("task panicked");
+            assert_eq!(res2, Response::error(Some(id2), Error::request_cancelled()));
+        }
     }
 }

@@ -239,3 +239,114 @@ pub(crate) fn not_initialized_error() -> Error {
         data: None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod id {
+        use super::*;
+
+        #[test]
+        fn number_display() {
+            let id = Id::Number(42);
+            assert_eq!("42", format!("{}", id));
+        }
+
+        #[test]
+        fn string_display() {
+            let id = Id::String("foo".into());
+            assert_eq!("\"foo\"", format!("{}", id));
+        }
+    }
+
+    mod outgoing {
+        use super::*;
+        use serde_json::json;
+
+        #[test]
+        fn display_response() {
+            let id = Id::Number(1);
+            let response = Response::ok(id, json!({}));
+            let outgoing = Outgoing::Response(response);
+            let json = json!({"jsonrpc": "2.0", "result": {}, "id": 1});
+            assert_eq!(json.to_string(), format!("{}", outgoing));
+        }
+
+        #[test]
+        fn display_client_request() {
+            let id = 1;
+            let params = {
+                let typ = lsp::MessageType::Info;
+                let message = Default::default();
+                let actions = Default::default();
+                lsp::ShowMessageRequestParams { typ, message, actions }
+            };
+            let outgoing = Outgoing::Request(ClientRequest::request::<lsp::request::ShowMessageRequest>(id, params));
+            let json = json!({
+                "jsonrpc": "2.0",
+                "method": "window/showMessageRequest",
+                "params": { "type": 3, "message": ""},
+                "id": 1
+            });
+            assert_eq!(json.to_string(), format!("{}", outgoing));
+        }
+    }
+
+    mod response {
+        use super::*;
+        use serde_json::json;
+
+        #[test]
+        fn from_parts_ok() {
+            let id = Id::Number(1);
+            let value = Value::Null;
+            let body = Ok(value.clone());
+            let response = Response::from_parts(id.clone(), body.clone());
+            assert_eq!(response, Response::ok(id.clone(), value.clone()));
+            assert_eq!(response.into_parts(), (Some(id.clone()), body.clone()));
+        }
+
+        #[test]
+        fn from_parts_err() {
+            let id = Id::Number(1);
+            let error = Error::internal_error();
+            let body = Err(error.clone());
+            let response = Response::from_parts(id.clone(), body.clone());
+            assert_eq!(response, Response::error(Some(id.clone()), error.clone()));
+            assert_eq!(response.into_parts(), (Some(id.clone()), body.clone()));
+        }
+
+        #[test]
+        fn id_ok() {
+            let id = Id::Number(1);
+            let response = Response::ok(id.clone(), json!({}));
+            assert_eq!(response.id(), Some(&id));
+        }
+
+        #[test]
+        fn id_err() {
+            let id = Id::Number(1);
+            let response = Response::error(Some(id.clone()), Error::internal_error());
+            assert_eq!(response.id(), Some(&id));
+            let response = Response::error(None, Error::internal_error());
+            assert_eq!(response.id(), None);
+        }
+    }
+
+    mod version {
+        use super::*;
+
+        #[test]
+        fn deserialize_valid() {
+            let result = serde_json::from_str::<Version>("\"2.0\"");
+            assert!(result.is_ok())
+        }
+
+        #[test]
+        fn deserialize_invalid() {
+            let result = serde_json::from_str::<Version>("\"1.0\"");
+            assert!(result.is_err());
+        }
+    }
+}

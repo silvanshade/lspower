@@ -143,14 +143,15 @@ impl Debug for LspService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsonrpc::Result;
     use async_trait::async_trait;
+    use serde_json::json;
     use tower_test::mock::Spawn;
 
-    const INITIALIZE_REQUEST: &str = r#"{"jsonrpc":"2.0","method":"initialize","params":{"capabilities":{}},"id":1}"#;
-    const INITIALIZED_NOTIF: &str = r#"{"jsonrpc":"2.0","method":"initialized","params":{}}"#;
-    const SHUTDOWN_REQUEST: &str = r#"{"jsonrpc":"2.0","method":"shutdown","id":1}"#;
-    const EXIT_NOTIF: &str = r#"{"jsonrpc":"2.0","method":"exit"}"#;
+    const INITIALIZE_REQUEST: &str =
+        r#"{ "jsonrpc": "2.0", "method": "initialize", "params": { "capabilities": {} }, "id": 1 }"#;
+    const INITIALIZED_NOTIF: &str = r#"{ "jsonrpc": "2.0", "method": "initialized", "params": {} }"#;
+    const SHUTDOWN_REQUEST: &str = r#"{ "jsonrpc": "2.0", "method": "shutdown", "id": 1 }"#;
+    const EXIT_NOTIF: &str = r#"{ "jsonrpc": "2.0", "method": "exit" }"#;
 
     #[derive(Debug, Default)]
     struct Mock;
@@ -161,7 +162,7 @@ mod tests {
             Ok(lsp::InitializeResult::default())
         }
 
-        async fn shutdown(&self) -> Result<()> {
+        async fn shutdown(&self) -> crate::jsonrpc::Result<()> {
             Ok(())
         }
     }
@@ -172,13 +173,13 @@ mod tests {
         let mut service = Spawn::new(service);
 
         let initialize: crate::jsonrpc::Incoming = serde_json::from_str(INITIALIZE_REQUEST).unwrap();
-        let raw = r#"{"jsonrpc":"2.0","result":{"capabilities":{}},"id":1}"#;
-        let ok = serde_json::from_str(raw).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "result": { "capabilities": {} }, "id": 1 });
+        let ok = serde_json::from_value(raw).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(initialize.clone()).await, Ok(Some(ok)));
 
-        let raw = r#"{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":1}"#;
-        let err = serde_json::from_str(raw).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "error": { "code": -32600, "message": "Invalid request" }, "id": 1 });
+        let err = serde_json::from_value(raw).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(initialize).await, Ok(Some(err)));
     }
@@ -189,19 +190,19 @@ mod tests {
         let mut service = Spawn::new(service);
 
         let initialize: crate::jsonrpc::Incoming = serde_json::from_str(INITIALIZE_REQUEST).unwrap();
-        let raw = r#"{"jsonrpc":"2.0","result":{"capabilities":{}},"id":1}"#;
-        let ok = serde_json::from_str(raw).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "result": { "capabilities": {} }, "id":1 });
+        let ok = serde_json::from_value(raw).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(initialize.clone()).await, Ok(Some(ok)));
 
         let shutdown: crate::jsonrpc::Incoming = serde_json::from_str(SHUTDOWN_REQUEST).unwrap();
-        let raw = r#"{"jsonrpc":"2.0","result":null,"id":1}"#;
-        let ok = serde_json::from_str(raw).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "result": null, "id": 1 });
+        let ok = serde_json::from_value(raw).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(shutdown.clone()).await, Ok(Some(ok)));
 
-        let raw = r#"{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":1}"#;
-        let err = serde_json::from_str(raw).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "error": { "code": -32600, "message": "Invalid request" }, "id": 1 });
+        let err = serde_json::from_value(raw).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(shutdown).await, Ok(Some(err)));
     }

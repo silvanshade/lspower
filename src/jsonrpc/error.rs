@@ -185,3 +185,100 @@ impl Display for Error {
 
 impl std::error::Error for Error {
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::jsonrpc::error::*;
+
+    #[test]
+    fn display_error() {
+        let error = Error::parse_error();
+        assert_eq!("Parse error: Parse error", format!("{}", error));
+    }
+
+    #[test]
+    fn display_error_code() {
+        let code = ErrorCode::ParseError;
+        assert_eq!("-32700", format!("{}", code));
+    }
+
+    #[test]
+    fn parse_error() {
+        let code = ErrorCode::ParseError;
+        assert_eq!(code, code.code().into());
+        let error = Error::parse_error();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn invalid_request() {
+        let code = ErrorCode::InvalidRequest;
+        assert_eq!(code, code.code().into());
+        let error = Error::invalid_request();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn method_not_found() {
+        let code = ErrorCode::MethodNotFound;
+        assert_eq!(code, code.code().into());
+        let error = Error::method_not_found();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn invalid_params() {
+        let code = ErrorCode::InvalidParams;
+        assert_eq!(code, code.code().into());
+        let error = Error::invalid_params(code.description());
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn internal_error() {
+        let code = ErrorCode::InternalError;
+        assert_eq!(code, code.code().into());
+        let error = Error::internal_error();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn request_cancelled() {
+        let code = ErrorCode::RequestCancelled;
+        assert_eq!(code, code.code().into());
+        let error = Error::request_cancelled();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn content_modified() {
+        let code = ErrorCode::ContentModified;
+        assert_eq!(code, code.code().into());
+        let error = Error::content_modified();
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn server_error() {
+        let code = ErrorCode::ServerError(42);
+        assert_eq!(code, code.code().into());
+        let error = Error::new(code);
+        assert_eq!(code, error.code);
+        assert_eq!(code.description(), error.message);
+    }
+
+    #[test]
+    fn server_not_initialized() {
+        let code = ErrorCode::ServerError(-32002);
+        let error = crate::jsonrpc::not_initialized_error();
+        assert_eq!(code, error.code);
+        assert_eq!("Server not initialized", error.message);
+    }
+}
