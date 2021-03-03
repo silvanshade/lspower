@@ -275,6 +275,12 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;runtime-agnostic&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">async_codec_lite</span>::{<span class="ident">Decoder</span>, <span class="ident">Encoder</span>};
@@ -333,6 +339,7 @@
 <span class="doccomment">/// Encodes and decodes Language Server Protocol messages.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LanguageServerCodec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="ident">http_error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">httparse</span>::<span class="ident">Error</span><span class="op">&gt;</span>,
     <span class="ident">headers_len</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     <span class="ident">content_len</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     <span class="ident">_marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
@@ -340,6 +347,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">LanguageServerCodec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">http_error</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="self">self</span>.<span class="ident">headers_len</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="self">self</span>.<span class="ident">content_len</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     }
@@ -348,6 +356,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LanguageServerCodec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">LanguageServerCodec</span> {
+            <span class="ident">http_error</span>: <span class="prelude-val">None</span>,
             <span class="ident">headers_len</span>: <span class="prelude-val">None</span>,
             <span class="ident">content_len</span>: <span class="prelude-val">None</span>,
             <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
@@ -411,8 +420,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span>;
 
     <span class="kw">fn</span> <span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BytesMut</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">http_error</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-
+        <span class="comment">// Parse the headers first if necessary</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">headers_len</span>.<span class="ident">is_none</span>() {
             {
                 <span class="comment">// Placeholder used for parsing headers into</span>
@@ -442,13 +450,13 @@
                     },
                     <span class="comment">// An error occurred during parsing of the headers</span>
                     <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">http_error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">error</span>);
+                        <span class="self">self</span>.<span class="ident">http_error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">error</span>);
                     },
                 }
             }
         }
 
-        <span class="comment">// &quot;Content-Length&quot; has been calculated</span>
+        <span class="comment">// &quot;Content-Length&quot; has been parsed</span>
         <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">headers_len</span>), <span class="prelude-val">Some</span>(<span class="ident">content_len</span>)) <span class="op">=</span> (<span class="self">self</span>.<span class="ident">headers_len</span>, <span class="self">self</span>.<span class="ident">content_len</span>) {
             <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">headers_len</span> <span class="op">+</span> <span class="ident">content_len</span>;
 
@@ -457,22 +465,26 @@
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
             }
 
+            <span class="comment">// Parse the JSON-RPC message bytes</span>
             <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">headers_len</span> .. <span class="ident">delta</span>];
             <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="ident">msg</span>)<span class="question-mark">?</span>;
 
             <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;&lt;- {}&quot;</span>, <span class="ident">msg</span>);
 
+            <span class="comment">// Parse the JSON-RPC data as JSON</span>
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="ident">msg</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">parsed</span>)),
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>()),
             };
 
+            <span class="comment">// Advance the buffer</span>
             <span class="ident">src</span>.<span class="ident">advance</span>(<span class="ident">delta</span>);
+            <span class="comment">// Reset the codec state</span>
             <span class="self">self</span>.<span class="ident">reset</span>();
 
             <span class="ident">result</span>
 
-        <span class="comment">// &quot;Content-Length&quot; hasn&#39;t been calculated</span>
+        <span class="comment">// &quot;Content-Length&quot; hasn&#39;t been parsed</span>
         } <span class="kw">else</span> {
             <span class="comment">// Maybe there are garbage bytes so try to scan ahead for another &quot;Content-Length&quot;</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">offset</span>) <span class="op">=</span> <span class="ident">twoway</span>::<span class="ident">find_bytes</span>(<span class="ident">src</span>, <span class="string">b&quot;Content-Length&quot;</span>) {
@@ -481,7 +493,7 @@
             }
 
             <span class="comment">// Handle the conditions that caused decoding to fail</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">http_error</span>) <span class="op">=</span> <span class="ident">http_error</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">http_error</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">http_error</span> {
                 <span class="comment">// There was an error parsing the headers</span>
                 <span class="prelude-val">Err</span>(<span class="ident">ParseError</span>::<span class="ident">Httparse</span>(<span class="ident">http_error</span>))
             } <span class="kw">else</span> {
