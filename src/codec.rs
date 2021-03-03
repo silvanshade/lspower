@@ -200,7 +200,7 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
 
             result
 
-        // "Content-Length" hasn't been parsed
+        // Headers were parsed but "Content-Length" wasn't found
         } else {
             // Reset the codec state
             self.reset();
