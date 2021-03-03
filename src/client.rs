@@ -324,3 +324,212 @@ impl Debug for Client {
             .finish()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(unused)]
+
+    use super::*;
+    use crate::jsonrpc::{ClientRequest, Id, Outgoing, Response};
+    use futures::StreamExt;
+    use lsp::{notification::TelemetryEvent, MessageActionItem};
+    use serde_json::json;
+
+    mod helper {
+        use super::*;
+        use crate::jsonrpc::Outgoing;
+        use futures::channel::mpsc;
+
+        pub(super) fn client() -> (Client, mpsc::Receiver<Outgoing>) {
+            let state = Arc::new(crate::server::State::new());
+            let (tx, rx) = mpsc::channel(1);
+            let pending_client = Arc::new(crate::jsonrpc::ClientRequests::new());
+            let client = crate::client::Client::new(tx, pending_client, state);
+            (client, rx)
+        }
+    }
+
+    #[tokio::test]
+    async fn apply_edit() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let req = {
+            let edit = lsp::WorkspaceEdit::default();
+            let label = Default::default();
+            client.apply_edit(edit, label)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(lsp::ApplyWorkspaceEditResponse {
+                applied: Default::default(),
+                failure_reason: Default::default(),
+                failed_change: Default::default(),
+            })
+            .unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn configuration() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let req = {
+            let items = Default::default();
+            client.configuration(items)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(Vec::<serde_json::Value>::new()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+
+        Ok(())
+    }
+
+    #[test]
+    fn new() {
+        let client = helper::client().0;
+        assert_eq!(client.inner.state.get(), crate::server::StateKind::Uninitialized);
+    }
+
+    #[tokio::test]
+    async fn log_message() {
+        let (client, mut rx) = helper::client();
+        let typ = lsp::MessageType::Info;
+        let message = String::default();
+        client.log_message(typ, message.clone()).await;
+        if let Some(item) = rx.next().await {
+            let params = lsp::LogMessageParams { typ, message };
+            let message = Outgoing::Request(ClientRequest::notification::<lsp::notification::LogMessage>(params));
+            assert_eq!(item, message);
+        }
+    }
+
+    #[tokio::test]
+    async fn publish_diagnostics() {
+        let (client, mut rx) = helper::client();
+        client.inner.state.set(crate::server::StateKind::Initialized);
+        let uri = lsp::Url::parse("inmemory::///test").unwrap();
+        let diags = Vec::<lsp::Diagnostic>::new();
+        let version = Option::<i32>::default();
+        client
+            .publish_diagnostics(uri.clone(), diags.clone(), version)
+            .await;
+        if let Some(item) = rx.next().await {
+            let params = lsp::PublishDiagnosticsParams {
+                uri,
+                diagnostics: diags,
+                version,
+            };
+            let message = Outgoing::Request(ClientRequest::notification::<lsp::notification::PublishDiagnostics>(
+                params,
+            ));
+            assert_eq!(item, message);
+        }
+    }
+
+    #[tokio::test]
+    async fn show_message() {
+        let (client, mut rx) = helper::client();
+        let typ = lsp::MessageType::Info;
+        let message = String::default();
+        client.show_message(typ, message.clone()).await;
+        if let Some(item) = rx.next().await {
+            let params = lsp::ShowMessageParams { typ, message };
+            let message = Outgoing::Request(ClientRequest::notification::<lsp::notification::ShowMessage>(params));
+            assert_eq!(item, message);
+        }
+    }
+
+    #[tokio::test]
+    async fn show_message_request() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let typ = lsp::MessageType::Info;
+        let message = String::default();
+        let actions = Default::default();
+
+        let req = client.show_message_request(typ, message.clone(), actions);
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(None::<lsp::MessageActionItem>).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert!(result.is_ok());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn telemetry_event() {
+        let (client, mut rx) = helper::client();
+        client.telemetry_event(()).await;
+        if let Some(item) = rx.next().await {
+            let params = json!(null);
+            let message = Outgoing::Request(ClientRequest::notification::<lsp::notification::TelemetryEvent>(params));
+            assert_eq!(item, message);
+        }
+    }
+
+    #[tokio::test]
+    async fn register_capability() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let req = {
+            let registrations = Default::default();
+            client.register_capability(registrations)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn unregister_capability() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let req = {
+            let unregistrations = Default::default();
+            client.unregister_capability(unregistrations)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn workspace_folders() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client();
+
+        let req = client.workspace_folders();
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(None::<Vec<lsp::WorkspaceFolder>>).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+
+        Ok(())
+    }
+}
