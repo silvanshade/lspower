@@ -202,10 +202,12 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
 
         // "Content-Length" hasn't been parsed
         } else {
+            // Reset the codec state
+            self.reset();
+
             // Maybe there are garbage bytes so try to scan ahead for another "Content-Length"
             if let Some(offset) = twoway::find_bytes(src, b"Content-Length") {
                 src.advance(offset);
-                self.reset();
             }
 
             // Handle the conditions that caused decoding to fail
