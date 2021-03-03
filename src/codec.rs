@@ -181,24 +181,26 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                 return Ok(None);
             }
 
-            // Parse the JSON-RPC message bytes
-            let msg = &src[headers_len .. delta];
-            let msg = std::str::from_utf8(msg)?;
+            // Parse the JSON-RPC message bytes as JSON
+            let message = &src[headers_len .. delta];
+            let message = std::str::from_utf8(message)?;
 
-            log::trace!("<- {}", msg);
+            log::trace!("<- {}", message);
 
-            // Parse the JSON-RPC data as JSON
-            let result = match serde_json::from_str(msg) {
+            // Deserialize the JSON-RPC message JSON as data
+            let data = match serde_json::from_str(message) {
                 Ok(parsed) => Ok(Some(parsed)),
                 Err(err) => Err(err.into()),
             };
 
-            // Advance the buffer
-            src.advance(delta);
             // Reset the codec state
             self.reset();
 
-            result
+            // Advance the buffer
+            src.advance(delta);
+
+            // Return the deserialized data
+            data
 
         // Headers were parsed but "Content-Length" wasn't found
         } else {
