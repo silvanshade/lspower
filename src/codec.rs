@@ -55,6 +55,7 @@ impl From<std::str::Utf8Error> for ParseError {
 /// Encodes and decodes Language Server Protocol messages.
 #[derive(Clone, Debug)]
 pub struct LanguageServerCodec<T> {
+    http_error: Option<httparse::Error>,
     headers_len: Option<usize>,
     content_len: Option<usize>,
     _marker: PhantomData<T>,
@@ -62,6 +63,7 @@ pub struct LanguageServerCodec<T> {
 
 impl<T> LanguageServerCodec<T> {
     fn reset(&mut self) {
+        self.http_error = None;
         self.headers_len = None;
         self.content_len = None;
     }
@@ -70,6 +72,7 @@ impl<T> LanguageServerCodec<T> {
 impl<T> Default for LanguageServerCodec<T> {
     fn default() -> Self {
         LanguageServerCodec {
+            http_error: None,
             headers_len: None,
             content_len: None,
             _marker: PhantomData,
@@ -133,8 +136,7 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
     type Item = T;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        let mut http_error = None;
-
+        // Parse the headers first if necessary
         if self.headers_len.is_none() {
             {
                 // Placeholder used for parsing headers into
@@ -164,13 +166,13 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                     },
                     // An error occurred during parsing of the headers
                     Err(error) => {
-                        http_error = Some(error);
+                        self.http_error = Some(error);
                     },
                 }
             }
         }
 
-        // "Content-Length" has been calculated
+        // "Content-Length" has been parsed
         if let (Some(headers_len), Some(content_len)) = (self.headers_len, self.content_len) {
             let delta = headers_len + content_len;
 
@@ -179,22 +181,26 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                 return Ok(None);
             }
 
+            // Parse the JSON-RPC message bytes
             let msg = &src[headers_len .. delta];
             let msg = std::str::from_utf8(msg)?;
 
             log::trace!("<- {}", msg);
 
+            // Parse the JSON-RPC data as JSON
             let result = match serde_json::from_str(msg) {
                 Ok(parsed) => Ok(Some(parsed)),
                 Err(err) => Err(err.into()),
             };
 
+            // Advance the buffer
             src.advance(delta);
+            // Reset the codec state
             self.reset();
 
             result
 
-        // "Content-Length" hasn't been calculated
+        // "Content-Length" hasn't been parsed
         } else {
             // Maybe there are garbage bytes so try to scan ahead for another "Content-Length"
             if let Some(offset) = twoway::find_bytes(src, b"Content-Length") {
@@ -203,7 +209,7 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
             }
 
             // Handle the conditions that caused decoding to fail
-            if let Some(http_error) = http_error {
+            if let Some(http_error) = self.http_error {
                 // There was an error parsing the headers
                 Err(ParseError::Httparse(http_error))
             } else {
