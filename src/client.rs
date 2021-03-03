@@ -419,9 +419,7 @@ mod tests {
         let uri = lsp::Url::parse("inmemory::///test").unwrap();
         let diags = Vec::<lsp::Diagnostic>::new();
         let version = Option::<i32>::default();
-        client
-            .publish_diagnostics(uri.clone(), diags.clone(), version)
-            .await;
+        client.publish_diagnostics(uri.clone(), diags.clone(), version).await;
         if let Some(item) = rx.next().await {
             let params = lsp::PublishDiagnosticsParams {
                 uri,
