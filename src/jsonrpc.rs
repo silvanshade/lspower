@@ -303,8 +303,8 @@ mod tests {
             let value = Value::Null;
             let body = Ok(value.clone());
             let response = Response::from_parts(id.clone(), body.clone());
-            assert_eq!(response, Response::ok(id.clone(), value.clone()));
-            assert_eq!(response.into_parts(), (Some(id.clone()), body.clone()));
+            assert_eq!(response, Response::ok(id.clone(), value));
+            assert_eq!(response.into_parts(), (Some(id), body));
         }
 
         #[test]
@@ -313,8 +313,8 @@ mod tests {
             let error = Error::internal_error();
             let body = Err(error.clone());
             let response = Response::from_parts(id.clone(), body.clone());
-            assert_eq!(response, Response::error(Some(id.clone()), error.clone()));
-            assert_eq!(response.into_parts(), (Some(id.clone()), body.clone()));
+            assert_eq!(response, Response::error(Some(id.clone()), error));
+            assert_eq!(response.into_parts(), (Some(id), body));
         }
 
         #[test]

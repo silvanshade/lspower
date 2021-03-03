@@ -150,7 +150,7 @@ mod tests {
             let pending = ClientRequests::new();
             let id = Id::Number(1);
             tokio::spawn(pending.wait(id.clone()));
-            tokio::spawn(pending.wait(id.clone()));
+            tokio::spawn(pending.wait(id));
         }
 
         #[tokio::test]
@@ -171,8 +171,8 @@ mod tests {
         async fn unbalanced_insert() {
             let pending = ClientRequests::new();
             let id = Id::Number(1);
-            let expected = Response::ok(id.clone(), json!({}));
-            pending.insert(expected.clone());
+            let expected = Response::ok(id, json!({}));
+            pending.insert(expected);
         }
     }
 
