@@ -55,14 +55,23 @@ impl From<std::str::Utf8Error> for ParseError {
 /// Encodes and decodes Language Server Protocol messages.
 #[derive(Clone, Debug)]
 pub struct LanguageServerCodec<T> {
-    remaining_msg_bytes: usize,
+    headers_len: Option<usize>,
+    content_len: Option<usize>,
     _marker: PhantomData<T>,
+}
+
+impl<T> LanguageServerCodec<T> {
+    fn reset(&mut self) {
+        self.headers_len = None;
+        self.content_len = None;
+    }
 }
 
 impl<T> Default for LanguageServerCodec<T> {
     fn default() -> Self {
         LanguageServerCodec {
-            remaining_msg_bytes: 0,
+            headers_len: None,
+            content_len: None,
             _marker: PhantomData,
         }
     }
@@ -124,95 +133,84 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
     type Item = T;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if self.remaining_msg_bytes > src.len() {
-            return Ok(None);
-        }
-
-        // The potential error returned by httparse
         let mut http_error = None;
-        // The value of the "Content-Length" header
-        let mut content_len = None;
-        // The total length of the parsed http headers
-        let mut headers_len = None;
 
-        {
-            // Placeholder used for parsing headers into
-            let dst = &mut [httparse::EMPTY_HEADER; 2];
+        if self.headers_len.is_none() {
+            {
+                // Placeholder used for parsing headers into
+                let dst = &mut [httparse::EMPTY_HEADER; 2];
 
-            // Parse the headers and try to extract values for the previous mut vars
-            match httparse::parse_headers(src, dst) {
-                // A complete set of headers was parsed succesfully
-                Ok(httparse::Status::Complete((offset, headers))) => {
-                    // If some headers were parsed successefully, set the headers length
-                    headers_len = Some(offset);
-                    // Scan through the headers
-                    for header in headers {
-                        // If the "Content-Length" header is found, parse the value as a usize
-                        if header.name == "Content-Length" {
-                            let value = std::str::from_utf8(header.value)?;
-                            let value = value.parse::<usize>().map_err(|_| ParseError::InvalidLength)?;
-                            let delta = offset + value;
-                            // Ensure that the source bytes is long enough for us to decode the full content ...
-                            if src.len() < delta {
-                                // ... otherwise set the remaining num of bytes needed (avoids unnecessary reparsing)
-                                self.remaining_msg_bytes = delta - src.len();
-                                // ... then return None and wait for more input
-                                return Ok(None);
-                            } else {
-                                content_len = Some(value);
+                // Parse the headers and try to extract values for the previous mut vars
+                match httparse::parse_headers(src, dst) {
+                    // A complete set of headers was parsed succesfully
+                    Ok(httparse::Status::Complete((header_len, headers))) => {
+                        // If some headers were parsed successefully, set the headers length
+                        self.headers_len = Some(header_len);
+                        // Scan through the headers
+                        for header in headers {
+                            // If the "Content-Length" header is found, parse the value as a usize
+                            if header.name == "Content-Length" {
+                                let content_len = std::str::from_utf8(header.value)?;
+                                let content_len =
+                                    content_len.parse::<usize>().map_err(|_| ParseError::InvalidLength)?;
+                                self.content_len = Some(content_len);
                             }
                         }
-                    }
-                },
-                // No errors occurred during parsing yet but no complete set of headers were parsed
-                Ok(httparse::Status::Partial) => {
-                    // Return None and wait for more input
-                    return Ok(None);
-                },
-                // An error occurred during parsing of the headers
-                Err(error) => {
-                    http_error = Some(error);
-                },
+                    },
+                    // No errors occurred during parsing yet but no complete set of headers were parsed
+                    Ok(httparse::Status::Partial) => {
+                        // Return and wait for more input
+                        return Ok(None);
+                    },
+                    // An error occurred during parsing of the headers
+                    Err(error) => {
+                        http_error = Some(error);
+                    },
+                }
             }
         }
 
-        // Headers were parsed (but "Content-Length" wasn't found) or an error occurred during parsing
-        if content_len.is_none() || http_error.is_some() {
-            // Maybe there are garbage prefix bytes so try to scan ahead for "Content-Length" to recover
-            if let Some(offset) = twoway::find_bytes(src, b"Content-Length") {
-                src.advance(offset);
-            }
-            // Then handle the conditions that caused decoding to fail ...
-            if let Some(http_error) = http_error {
-                // ... there was an error parsing the headers
-                return Err(ParseError::Httparse(http_error));
-            } else {
-                // ... there was no "Content-Length" header found
-                return Err(ParseError::MissingHeader);
-            }
-        }
+        // "Content-Length" has been calculated
+        if let (Some(headers_len), Some(content_len)) = (self.headers_len, self.content_len) {
+            let delta = headers_len + content_len;
 
-        // The total length of the headers and the content
-        let delta;
+            // Source doesn't contain the full content yet so return and wait for more input
+            if src.len() < delta {
+                return Ok(None);
+            }
 
-        // The result of parsing the content
-        let result = if let (Some(headers_len), Some(content_len)) = (headers_len, content_len) {
-            delta = headers_len + content_len;
             let msg = &src[headers_len .. delta];
             let msg = std::str::from_utf8(msg)?;
+
             log::trace!("<- {}", msg);
-            match serde_json::from_str(msg) {
+
+            let result = match serde_json::from_str(msg) {
                 Ok(parsed) => Ok(Some(parsed)),
                 Err(err) => Err(err.into()),
-            }
+            };
+
+            src.advance(delta);
+            self.reset();
+
+            result
+
+        // "Content-Length" hasn't been calculated
         } else {
-            unreachable!()
-        };
+            // Maybe there are garbage bytes so try to scan ahead for another "Content-Length"
+            if let Some(offset) = twoway::find_bytes(src, b"Content-Length") {
+                src.advance(offset);
+                self.reset();
+            }
 
-        src.advance(delta);
-        self.remaining_msg_bytes = 0;
-
-        result
+            // Handle the conditions that caused decoding to fail
+            if let Some(http_error) = http_error {
+                // There was an error parsing the headers
+                Err(ParseError::Httparse(http_error))
+            } else {
+                // There was no "Content-Length" header found
+                Err(ParseError::MissingHeader)
+            }
+        }
     }
 }
 
