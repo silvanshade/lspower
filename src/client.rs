@@ -340,18 +340,21 @@ mod tests {
         use crate::jsonrpc::Outgoing;
         use futures::channel::mpsc;
 
-        pub(super) fn client() -> (Client, mpsc::Receiver<Outgoing>) {
+        pub(super) fn client(initialize: bool) -> (Client, mpsc::Receiver<Outgoing>) {
             let state = Arc::new(crate::server::State::new());
             let (tx, rx) = mpsc::channel(1);
             let pending_client = Arc::new(crate::jsonrpc::ClientRequests::new());
-            let client = crate::client::Client::new(tx, pending_client, state);
+            let mut client = crate::client::Client::new(tx, pending_client, state);
+            if initialize {
+                client.inner.state.set(crate::server::StateKind::Initialized);
+            }
             (client, rx)
         }
     }
 
     #[tokio::test]
     async fn apply_edit() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
+        let (client, mut _rx) = helper::client(false);
 
         let req = {
             let edit = lsp::WorkspaceEdit::default();
@@ -376,7 +379,7 @@ mod tests {
 
     #[tokio::test]
     async fn configuration() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
+        let (client, mut _rx) = helper::client(false);
 
         let req = {
             let items = Default::default();
@@ -394,14 +397,20 @@ mod tests {
     }
 
     #[test]
+    fn display() {
+        let client = helper::client(true).0;
+        let _ = format!("{:?}", client);
+    }
+
+    #[test]
     fn new() {
-        let client = helper::client().0;
+        let client = helper::client(false).0;
         assert_eq!(client.inner.state.get(), crate::server::StateKind::Uninitialized);
     }
 
     #[tokio::test]
     async fn log_message() {
-        let (client, mut rx) = helper::client();
+        let (client, mut rx) = helper::client(true);
         let typ = lsp::MessageType::Info;
         let message = String::default();
         client.log_message(typ, message.clone()).await;
@@ -414,8 +423,7 @@ mod tests {
 
     #[tokio::test]
     async fn publish_diagnostics() {
-        let (client, mut rx) = helper::client();
-        client.inner.state.set(crate::server::StateKind::Initialized);
+        let (client, mut rx) = helper::client(true);
         let uri = lsp::Url::parse("inmemory::///test").unwrap();
         let diags = Vec::<lsp::Diagnostic>::new();
         let version = Option::<i32>::default();
@@ -434,8 +442,36 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn register_capability() -> anyhow::Result<()> {
+        let (client, mut _rx) = helper::client(true);
+
+        let req = {
+            let registrations = Default::default();
+            client.register_capability(registrations)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Ok(()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn send_notification_initialized_when_uninitialized() {
+        let (client, mut rx) = helper::client(false);
+        let uri = lsp::Url::parse("inmemory::///test").unwrap();
+        let diags = Vec::<lsp::Diagnostic>::new();
+        let version = Option::<i32>::default();
+        client.publish_diagnostics(uri.clone(), diags.clone(), version).await;
+    }
+
+    #[tokio::test]
     async fn show_message() {
-        let (client, mut rx) = helper::client();
+        let (client, mut rx) = helper::client(true);
         let typ = lsp::MessageType::Info;
         let message = String::default();
         client.show_message(typ, message.clone()).await;
@@ -448,7 +484,7 @@ mod tests {
 
     #[tokio::test]
     async fn show_message_request() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
+        let (client, mut _rx) = helper::client(true);
 
         let typ = lsp::MessageType::Info;
         let message = String::default();
@@ -468,7 +504,7 @@ mod tests {
 
     #[tokio::test]
     async fn telemetry_event() {
-        let (client, mut rx) = helper::client();
+        let (client, mut rx) = helper::client(true);
         client.telemetry_event(()).await;
         if let Some(item) = rx.next().await {
             let params = json!(null);
@@ -478,27 +514,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn register_capability() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
-
-        let req = {
-            let registrations = Default::default();
-            client.register_capability(registrations)
-        };
-        let rsp = async {
-            let id = Id::Number(0);
-            let result = serde_json::to_value(()).unwrap();
-            client.inner.pending_requests.insert(Response::ok(id, result));
-        };
-        let (result, ()) = futures::future::join(req, rsp).await;
-        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
-
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn unregister_capability() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
+        let (client, mut _rx) = helper::client(true);
 
         let req = {
             let unregistrations = Default::default();
@@ -510,14 +527,14 @@ mod tests {
             client.inner.pending_requests.insert(Response::ok(id, result));
         };
         let (result, ()) = futures::future::join(req, rsp).await;
-        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+        assert_eq!(result, Ok(()));
 
         Ok(())
     }
 
     #[tokio::test]
     async fn workspace_folders() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client();
+        let (client, mut _rx) = helper::client(true);
 
         let req = client.workspace_folders();
         let rsp = async {
@@ -526,7 +543,7 @@ mod tests {
             client.inner.pending_requests.insert(Response::ok(id, result));
         };
         let (result, ()) = futures::future::join(req, rsp).await;
-        assert_eq!(result, Err(crate::jsonrpc::not_initialized_error()));
+        assert_eq!(result, Ok(None));
 
         Ok(())
     }
