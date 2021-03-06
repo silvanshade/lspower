@@ -232,6 +232,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn decodes_optional_content_type() {
+        let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
+        let content_len = format!("Content-Length: {}", decoded.len());
+        let content_type =
+            "Content-Type: application/vscode-jsonrpc; charset=utf-8; foo=\"bar\\nbaz\\\"qux\\\"\"".to_string();
+        let encoded = format!("{}\r\n{}\r\n\r\n{}", content_len, content_type, decoded);
+
+        let mut codec = LanguageServerCodec::default();
+        let mut buffer = BytesMut::from(encoded.as_str());
+        let message = codec.decode(&mut buffer).unwrap();
+        let decoded: Value = serde_json::from_str(&decoded).unwrap();
+        assert_eq!(message, Some(decoded));
+    }
+
+    #[test]
     fn encode_and_decode() {
         let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
         let encoded = format!("Content-Length: {}\r\n\r\n{}", decoded.len(), decoded);
@@ -245,21 +260,6 @@ mod tests {
         let mut buffer = BytesMut::from(encoded.as_str());
         let message = codec.decode(&mut buffer).unwrap();
         let decoded = serde_json::from_str(&decoded).unwrap();
-        assert_eq!(message, Some(decoded));
-    }
-
-    #[test]
-    fn decodes_optional_content_type() {
-        let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
-        let content_len = format!("Content-Length: {}", decoded.len());
-        let content_type =
-            "Content-Type: application/vscode-jsonrpc; charset=utf-8; foo=\"bar\\nbaz\\\"qux\\\"\"".to_string();
-        let encoded = format!("{}\r\n{}\r\n\r\n{}", content_len, content_type, decoded);
-
-        let mut codec = LanguageServerCodec::default();
-        let mut buffer = BytesMut::from(encoded.as_str());
-        let message = codec.decode(&mut buffer).unwrap();
-        let decoded: Value = serde_json::from_str(&decoded).unwrap();
         assert_eq!(message, Some(decoded));
     }
 
