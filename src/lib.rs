@@ -771,7 +771,7 @@ pub trait LanguageServer: Send + Sync + 'static {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsonrpc::Incoming;
+    use crate::jsonrpc::{Id, Incoming, Outgoing, Response};
     use serde_json::json;
     use std::task::Poll;
     use tower_test::mock::Spawn;
@@ -793,24 +793,39 @@ mod tests {
     mod helper {
         use super::*;
         use crate::jsonrpc::Incoming;
+        use serde::{de::DeserializeOwned, Serialize};
         use serde_json::json;
         use std::task::Poll;
         use tower_test::mock::Spawn;
 
         pub(super) async fn initialize(service: &mut Spawn<LspService>) {
             let params = serde_json::from_value::<lsp::InitializeParams>(json!({ "capabilities": {} })).unwrap();
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "initialize",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = request("initialize", params).unwrap();
             let response =
                 serde_json::from_value(json!({ "jsonrpc": "2.0", "result": { "capabilities": {} }, "id": 1 })).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(Some(response)));
         }
+
+        pub(super) fn request<I: Serialize, O: DeserializeOwned>(
+            method: &str,
+            params: I,
+        ) -> Result<O, serde_json::Error> {
+            serde_json::from_value(json!({
+                "jsonrpc": "2.0",
+                "method": method,
+                "params": params,
+                "id": 1,
+            }))
+        }
+    }
+
+    #[tokio::test]
+    async fn initialize() {
+        let (service, _) = LspService::new(|_| Mock::default());
+        let mut service = Spawn::new(service);
+
+        helper::initialize(&mut service).await;
     }
 
     #[tokio::test]
@@ -821,21 +836,121 @@ mod tests {
         helper::initialize(&mut service).await;
 
         let params = lsp::InitializedParams {};
-        let request: Incoming = serde_json::from_value(json!({
-            "jsonrpc": "2.0",
-            "method": "initialized",
-            "params": params,
-            "id": 1,
-        }))
-        .unwrap();
+        let request: Incoming = helper::request("initialized", params).unwrap();
         assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
         assert_eq!(service.call(request.clone()).await, Ok(None));
+    }
+
+    #[tokio::test]
+    async fn shutdown() {
+        let (service, _) = LspService::new(|_| Mock::default());
+        let mut service = Spawn::new(service);
+
+        helper::initialize(&mut service).await;
+
+        let request: Incoming = helper::request("shutdown", ()).unwrap();
+        let response = Response::ok(Id::Number(1), json!(null));
+        assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+        assert_eq!(
+            service.call(request.clone()).await,
+            Ok(Some(Outgoing::Response(response)))
+        );
+    }
+
+    mod call_hierarchy {
+        use super::*;
+        use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
+        use std::task::Poll;
+        use tower_test::mock::Spawn;
+
+        #[tokio::test]
+        async fn incoming_calls() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CallHierarchyIncomingCallsParams {
+                item: lsp::CallHierarchyItem {
+                    name: Default::default(),
+                    kind: lsp::SymbolKind::Unknown,
+                    tags: Default::default(),
+                    detail: Default::default(),
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    range: Default::default(),
+                    selection_range: Default::default(),
+                    data: Default::default(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("callHierarchy/incomingCalls", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn outgoing_calls() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CallHierarchyOutgoingCallsParams {
+                item: lsp::CallHierarchyItem {
+                    name: Default::default(),
+                    kind: lsp::SymbolKind::Unknown,
+                    tags: Default::default(),
+                    detail: Default::default(),
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    range: Default::default(),
+                    selection_range: Default::default(),
+                    data: Default::default(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("callHierarchy/outgoingCalls", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+    }
+
+    mod code_action {
+        use super::*;
+        use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
+        use std::task::Poll;
+        use tower_test::mock::Spawn;
+
+        #[tokio::test]
+        async fn resolve() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CodeAction::default();
+            let request: Incoming = helper::request("codeAction/resolve", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
     }
 
     mod completion_item {
         use super::*;
         use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
-        use serde_json::json;
         use std::task::Poll;
         use tower_test::mock::Spawn;
 
@@ -847,13 +962,7 @@ mod tests {
             super::helper::initialize(&mut service).await;
 
             let params = lsp::CompletionItem::default();
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "completionItem/resolve",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("completionItem/resolve", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -866,9 +975,208 @@ mod tests {
     mod text_document {
         use super::*;
         use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
-        use serde_json::json;
         use std::task::Poll;
         use tower_test::mock::Spawn;
+
+        mod semantic_tokens {
+            use super::*;
+            use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
+            use std::task::Poll;
+            use tower_test::mock::Spawn;
+
+            mod full {
+                use super::*;
+                use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
+                use std::task::Poll;
+                use tower_test::mock::Spawn;
+
+                #[tokio::test]
+                async fn delta() {
+                    let (service, _) = LspService::new(|_| Mock::default());
+                    let mut service = Spawn::new(service);
+
+                    super::helper::initialize(&mut service).await;
+
+                    let params = lsp::SemanticTokensDeltaParams {
+                        work_done_progress_params: Default::default(),
+                        partial_result_params: Default::default(),
+                        text_document: lsp::TextDocumentIdentifier {
+                            uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                        },
+                        previous_result_id: Default::default(),
+                    };
+                    let request: Incoming = helper::request("textDocument/semanticTokens/full", params).unwrap();
+                    let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+                    assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+                    assert_eq!(
+                        service.call(request.clone()).await,
+                        Ok(Some(Outgoing::Response(response)))
+                    );
+                }
+            }
+
+            #[tokio::test]
+            async fn full() {
+                let (service, _) = LspService::new(|_| Mock::default());
+                let mut service = Spawn::new(service);
+
+                super::helper::initialize(&mut service).await;
+
+                let params = lsp::SemanticTokensParams {
+                    work_done_progress_params: Default::default(),
+                    partial_result_params: Default::default(),
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                };
+                let request: Incoming = helper::request("textDocument/semanticTokens/full", params).unwrap();
+                let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+                assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+                assert_eq!(
+                    service.call(request.clone()).await,
+                    Ok(Some(Outgoing::Response(response)))
+                );
+            }
+
+            #[tokio::test]
+            async fn range() {
+                let (service, _) = LspService::new(|_| Mock::default());
+                let mut service = Spawn::new(service);
+
+                super::helper::initialize(&mut service).await;
+
+                let params = lsp::SemanticTokensRangeParams {
+                    work_done_progress_params: Default::default(),
+                    partial_result_params: Default::default(),
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                    range: Default::default(),
+                };
+                let request: Incoming = helper::request("textDocument/semanticTokens/range", params).unwrap();
+                let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+                assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+                assert_eq!(
+                    service.call(request.clone()).await,
+                    Ok(Some(Outgoing::Response(response)))
+                );
+            }
+
+            #[tokio::test]
+            async fn refresh() {
+                let (service, _) = LspService::new(|_| Mock::default());
+                let mut service = Spawn::new(service);
+
+                super::helper::initialize(&mut service).await;
+
+                let request: Incoming = helper::request("textDocument/semanticTokens/refresh", ()).unwrap();
+                let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+                assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+                assert_eq!(
+                    service.call(request.clone()).await,
+                    Ok(Some(Outgoing::Response(response)))
+                );
+            }
+        }
+
+        #[tokio::test]
+        async fn code_action() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CodeActionParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                range: Default::default(),
+                context: Default::default(),
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/codeAction", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn code_lens() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CodeLensParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/codeLens", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn code_lens_resolve() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CodeLens {
+                range: Default::default(),
+                command: Default::default(),
+                data: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/codeLensResolve", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn color_presentation() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::ColorPresentationParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                color: lsp::Color {
+                    red: Default::default(),
+                    green: Default::default(),
+                    blue: Default::default(),
+                    alpha: Default::default(),
+                },
+                range: Default::default(),
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/colorPresentation", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
 
         #[tokio::test]
         async fn completion() {
@@ -888,13 +1196,7 @@ mod tests {
                 partial_result_params: Default::default(),
                 context: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/completion",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/completion", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -920,13 +1222,7 @@ mod tests {
                 work_done_progress_params: Default::default(),
                 partial_result_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/declaration",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/declaration", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -952,13 +1248,7 @@ mod tests {
                 work_done_progress_params: Default::default(),
                 partial_result_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/definition",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/definition", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -981,13 +1271,7 @@ mod tests {
                 },
                 content_changes: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/didChange",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/didChange", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1004,13 +1288,7 @@ mod tests {
                     uri: lsp::Url::parse("inmemory::///test").unwrap(),
                 },
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/didClose",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/didClose", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1030,13 +1308,7 @@ mod tests {
                     text: Default::default(),
                 },
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/didOpen",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/didOpen", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1054,15 +1326,172 @@ mod tests {
                 },
                 text: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/didSave",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/didSave", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
+        }
+
+        #[tokio::test]
+        async fn document_color() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentColorParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/documentColor", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn document_highlight() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentHighlightParams {
+                text_document_position_params: lsp::TextDocumentPositionParams {
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                    position: Default::default(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/documentHighlight", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn document_link() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentLinkParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/documentLink", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn document_link_resolve() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentLink {
+                range: Default::default(),
+                target: Default::default(),
+                tooltip: Default::default(),
+                data: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/documentLinkResolve", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn document_symbol() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentSymbolParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/documentSymbol", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn folding_range() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::FoldingRangeParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/foldingRange", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn formatting() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentFormattingParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                options: Default::default(),
+                work_done_progress_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/formatting", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
         }
 
         #[tokio::test]
@@ -1081,13 +1510,7 @@ mod tests {
                 },
                 work_done_progress_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/hover",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/hover", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1113,13 +1536,104 @@ mod tests {
                 work_done_progress_params: Default::default(),
                 partial_result_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/implementation",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/implementation", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn on_type_formatting() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentOnTypeFormattingParams {
+                text_document_position: lsp::TextDocumentPositionParams {
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                    position: Default::default(),
+                },
+                ch: Default::default(),
+                options: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/onTypeFormatting", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn prepare_call_hierarchy() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::CallHierarchyPrepareParams {
+                text_document_position_params: lsp::TextDocumentPositionParams {
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                    position: Default::default(),
+                },
+                work_done_progress_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/prepareCallHierarchy", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn prepare_rename() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::TextDocumentPositionParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                position: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/prepareRename", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn range_formatting() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::DocumentRangeFormattingParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                range: Default::default(),
+                options: Default::default(),
+                work_done_progress_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/rangeFormatting", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1148,13 +1662,74 @@ mod tests {
                     include_declaration: Default::default(),
                 },
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/references",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/references", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn rename() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::RenameParams {
+                text_document_position: lsp::TextDocumentPositionParams {
+                    text_document: lsp::TextDocumentIdentifier {
+                        uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                    },
+                    position: Default::default(),
+                },
+                new_name: Default::default(),
+                work_done_progress_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/rename", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn request_else() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = None::<serde_json::Value>;
+            let request: Incoming = helper::request("foo/bar", params).unwrap();
+            let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
+            assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+            assert_eq!(
+                service.call(request.clone()).await,
+                Ok(Some(Outgoing::Response(response)))
+            );
+        }
+
+        #[tokio::test]
+        async fn selection_range() {
+            let (service, _) = LspService::new(|_| Mock::default());
+            let mut service = Spawn::new(service);
+
+            super::helper::initialize(&mut service).await;
+
+            let params = lsp::SelectionRangeParams {
+                text_document: lsp::TextDocumentIdentifier {
+                    uri: lsp::Url::parse("inmemory::///test").unwrap(),
+                },
+                positions: Default::default(),
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+            let request: Incoming = helper::request("textDocument/selectionRange", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1180,13 +1755,7 @@ mod tests {
                 },
                 work_done_progress_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/signatureHelp",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/signatureHelp", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1212,13 +1781,7 @@ mod tests {
                 work_done_progress_params: Default::default(),
                 partial_result_params: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/typeDefinition",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/typeDefinition", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1240,13 +1803,7 @@ mod tests {
                 },
                 reason: lsp::TextDocumentSaveReason::Manual,
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/willSave",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/willSave", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1264,13 +1821,7 @@ mod tests {
                 },
                 reason: lsp::TextDocumentSaveReason::Manual,
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "textDocument/willSaveWaitUntil",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("textDocument/willSaveWaitUntil", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1283,7 +1834,7 @@ mod tests {
     mod workspace {
         use super::*;
         use crate::jsonrpc::{Error, Id, Incoming, Outgoing, Response};
-        use serde_json::{json, Value};
+        use serde_json::Value;
         use std::task::Poll;
         use tower_test::mock::Spawn;
 
@@ -1295,13 +1846,7 @@ mod tests {
             super::helper::initialize(&mut service).await;
 
             let params = lsp::DidChangeConfigurationParams { settings: Value::Null };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "workspace/didChangeConfiguration",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("workspace/didChangeConfiguration", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1316,13 +1861,7 @@ mod tests {
             let params = lsp::DidChangeWatchedFilesParams {
                 changes: Default::default(),
             };
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "workspace/didChangeWatchedFiles",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("workspace/didChangeWatchedFiles", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1335,13 +1874,7 @@ mod tests {
             super::helper::initialize(&mut service).await;
 
             let params = lsp::DidChangeWorkspaceFoldersParams::default();
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "workspace/didChangeWorkspaceFolders",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("workspace/didChangeWorkspaceFolders", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(service.call(request.clone()).await, Ok(None));
         }
@@ -1354,13 +1887,7 @@ mod tests {
             super::helper::initialize(&mut service).await;
 
             let params = lsp::ExecuteCommandParams::default();
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "workspace/executeCommand",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("workspace/executeCommand", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
@@ -1377,13 +1904,7 @@ mod tests {
             super::helper::initialize(&mut service).await;
 
             let params = lsp::WorkspaceSymbolParams::default();
-            let request: Incoming = serde_json::from_value(json!({
-                "jsonrpc": "2.0",
-                "method": "workspace/symbol",
-                "params": params,
-                "id": 1,
-            }))
-            .unwrap();
+            let request: Incoming = helper::request("workspace/symbol", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
             assert_eq!(
