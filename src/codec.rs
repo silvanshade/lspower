@@ -232,7 +232,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn decodes_optional_content_type() {
+    fn decodes_invalid_content_length() {
+        let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
+        let content_len = "Content-Length: foo".to_string();
+        let encoded = format!("{}\r\n\r\n{}", content_len, decoded);
+
+        let mut codec = LanguageServerCodec::<()>::default();
+        let mut buffer = BytesMut::from(encoded.as_str());
+        let message = codec.decode(&mut buffer);
+        if let Err(ParseError::InvalidLength) = message {
+            // noop
+        } else {
+            unreachable!();
+        }
+    }
+
+    #[test]
+    fn decode_optional_content_type() {
         let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
         let content_len = format!("Content-Length: {}", decoded.len());
         let content_type =
@@ -244,6 +260,21 @@ mod tests {
         let message = codec.decode(&mut buffer).unwrap();
         let decoded: Value = serde_json::from_str(&decoded).unwrap();
         assert_eq!(message, Some(decoded));
+    }
+
+    #[test]
+    fn decode_partial() {
+        let content_len = "Content-Length: 42".to_string();
+        let encoded = format!("{}\r\n\r\n", content_len);
+
+        let mut codec = LanguageServerCodec::<()>::default();
+        let mut buffer = BytesMut::from(encoded.as_str());
+        let message = codec.decode(&mut buffer);
+        if let Ok(None) = message {
+            // noop
+        } else {
+            unreachable!();
+        }
     }
 
     #[test]
@@ -261,6 +292,24 @@ mod tests {
         let message = codec.decode(&mut buffer).unwrap();
         let decoded = serde_json::from_str(&decoded).unwrap();
         assert_eq!(message, Some(decoded));
+    }
+
+    #[test]
+    fn parse_error_from_io_error() {
+        let kind = std::io::ErrorKind::Other;
+        let error = "test error";
+        let error = std::io::Error::new(kind, error);
+        ParseError::from(error);
+    }
+
+    #[test]
+    fn parse_error_from_utf8_error() {
+        let bytes = vec![0, 159, 146, 150];
+        if let Err(error) = std::str::from_utf8(&bytes) {
+            ParseError::from(error);
+        } else {
+            unreachable!()
+        }
     }
 
     #[test]
