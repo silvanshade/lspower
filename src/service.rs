@@ -168,6 +168,29 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn call_response() {
+        use crate::jsonrpc::{Id, Incoming, Response};
+
+        let (service, _) = LspService::new(|_| Mock::default());
+        let mut service = Spawn::new(service);
+
+        let initialize: crate::jsonrpc::Incoming = serde_json::from_str(INITIALIZE_REQUEST).unwrap();
+        let raw = json!({ "jsonrpc": "2.0", "result": { "capabilities": {} }, "id": 1 });
+        let ok = serde_json::from_value(raw).unwrap();
+        assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
+        assert_eq!(service.call(initialize.clone()).await, Ok(Some(ok)));
+
+        let incoming = Response::ok(Id::Number(0), json!(null));
+        assert_eq!(service.call(Incoming::Response(incoming)).await, Ok(None));
+    }
+
+    #[test]
+    fn debug() {
+        let (service, _) = LspService::new(|_| Mock::default());
+        format!("{:?}", service);
+    }
+
+    #[tokio::test]
     async fn initializes_only_once() {
         let (service, _) = LspService::new(|_| Mock::default());
         let mut service = Spawn::new(service);
@@ -222,5 +245,36 @@ mod tests {
 
         assert_eq!(service.poll_ready(), Poll::Ready(Err(ExitedError)));
         assert_eq!(service.call(initialized).await, Err(ExitedError));
+    }
+
+    mod exited_error {
+        use super::*;
+
+        #[test]
+        fn display() {
+            let error = ExitedError;
+            let display = format!("{}", error);
+            assert_eq!("language server has exited", display);
+        }
+    }
+
+    mod message_stream {
+        use super::*;
+        use futures::StreamExt;
+
+        #[tokio::test]
+        async fn is_terminated() {
+            let (_, mut messages) = LspService::new(|_| Mock::default());
+            assert_eq!(messages.is_terminated(), false);
+            while let Some(_) = messages.next().await {
+            }
+            assert_eq!(messages.is_terminated(), true);
+        }
+
+        #[tokio::test]
+        async fn poll_next() {
+            let (_, mut messages) = LspService::new(|_| Mock::default());
+            messages.next().await;
+        }
     }
 }
