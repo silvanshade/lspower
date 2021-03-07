@@ -266,8 +266,7 @@ mod tests {
         async fn is_terminated() {
             let (_, mut messages) = LspService::new(|_| Mock::default());
             assert_eq!(messages.is_terminated(), false);
-            while let Some(_) = messages.next().await {
-            }
+            while messages.next().await.is_some() {}
             assert_eq!(messages.is_terminated(), true);
         }
 
