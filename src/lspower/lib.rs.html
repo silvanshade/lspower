@@ -1936,7 +1936,7 @@
 <span class="kw">mod</span> <span class="ident">transport</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
-    <span class="ident">client</span>::<span class="ident">Client</span>,
+    <span class="ident">client</span>::{<span class="ident">CancellationToken</span>, <span class="ident">Client</span>, <span class="ident">TokenCanceller</span>},
     <span class="ident">service</span>::{<span class="ident">ExitedError</span>, <span class="ident">LspService</span>, <span class="ident">MessageStream</span>},
     <span class="ident">transport</span>::<span class="ident">Server</span>,
 };

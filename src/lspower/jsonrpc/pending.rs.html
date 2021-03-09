@@ -261,6 +261,8 @@
 <span id="258">258</span>
 <span id="259">259</span>
 <span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Hashmaps for tracking pending JSON-RPC requests.</span>
 
@@ -347,7 +349,7 @@
 }
 
 <span class="doccomment">/// A hashmap containing pending client requests, keyed by request ID.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientRequests</span>(<span class="ident">DashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&gt;</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientRequests</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">DashMap</span><span class="op">&lt;</span><span class="ident">Id</span>, <span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&gt;</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">ClientRequests</span> {
     <span class="doccomment">/// Creates a new pending client requests map.</span>
@@ -362,7 +364,9 @@
         <span class="kw">match</span> <span class="ident">r</span>.<span class="ident">id</span>() {
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;received response with request ID of `null`, ignoring&quot;</span>),
             <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">remove</span>(<span class="ident">id</span>) {
-                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="ident">r</span>).<span class="ident">expect</span>(<span class="string">&quot;receiver already dropped&quot;</span>),
+                <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="ident">r</span>);
+                },
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;received response with unknown request ID: {}&quot;</span>, <span class="ident">id</span>),
             },
         }
