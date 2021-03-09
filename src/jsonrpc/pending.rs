@@ -83,7 +83,7 @@ impl Debug for ServerRequests {
 }
 
 /// A hashmap containing pending client requests, keyed by request ID.
-pub struct ClientRequests(DashMap<Id, oneshot::Sender<Response>>);
+pub struct ClientRequests(pub(crate) DashMap<Id, oneshot::Sender<Response>>);
 
 impl ClientRequests {
     /// Creates a new pending client requests map.
@@ -98,7 +98,9 @@ impl ClientRequests {
         match r.id() {
             None => log::warn!("received response with request ID of `null`, ignoring"),
             Some(id) => match self.0.remove(id) {
-                Some((_, tx)) => tx.send(r).expect("receiver already dropped"),
+                Some((_, tx)) => {
+                    let _ = tx.send(r);
+                },
                 None => log::warn!("received response with unknown request ID: {}", id),
             },
         }

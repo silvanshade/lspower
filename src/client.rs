@@ -1,13 +1,101 @@
+#![allow(unused)]
+
 //! Types for sending data to and from the language client.
 
-use futures::{channel::mpsc, sink::SinkExt};
+use futures::{
+    channel::{mpsc, oneshot},
+    future,
+    select,
+    sink::SinkExt,
+    FutureExt,
+};
 use std::{
+    convert::TryFrom,
     fmt::{self, Debug, Formatter},
+    future::Future,
+    pin::Pin,
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
     },
 };
+
+/// A structure used to construct and cancel [`CancellationToken`].
+pub struct TokenCanceller {
+    cancelled: Arc<AtomicBool>,
+    future: future::Shared<Pin<Box<dyn Future<Output = Result<(), oneshot::Canceled>> + Send>>>,
+    sender: Option<oneshot::Sender<()>>,
+}
+
+impl Debug for TokenCanceller {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.debug_struct(stringify!(LspService))
+            .field("cancelled", &self.cancelled)
+            .field("sender", &self.sender)
+            .finish()
+    }
+}
+
+impl TokenCanceller {
+    /// Creates a new [`TokenCanceller`].
+    pub fn new() -> Self {
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let (sender, receiver) = oneshot::channel();
+        let future = receiver.boxed().shared();
+        TokenCanceller {
+            cancelled,
+            future,
+            sender: Some(sender),
+        }
+    }
+
+    /// Signals to all subordinate [`CancellationToken`] that they have been cancelled.
+    pub fn cancel(&mut self) {
+        if let Some(sender) = self.sender.take() {
+            if let Ok(()) = sender.send(()) {
+                self.cancelled.store(true, Ordering::SeqCst);
+            } else {
+                unreachable!()
+            }
+        }
+    }
+
+    /// Create a subordinate [`CancellationToken`].
+    pub fn token(&self) -> CancellationToken {
+        let cancelled = self.cancelled.clone();
+        let future = self.future.clone();
+        CancellationToken { cancelled, future }
+    }
+}
+
+impl Default for TokenCanceller {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// A token which listens for a cancellation signal from a [`TokenCanceller`].
+#[derive(Debug, Clone)]
+pub struct CancellationToken {
+    cancelled: Arc<AtomicBool>,
+    future: future::Shared<Pin<Box<dyn Future<Output = Result<(), oneshot::Canceled>> + Send>>>,
+}
+
+impl CancellationToken {
+    /// Checks whether the cancellation signal has been given.
+    pub fn is_cancelled(&self) -> bool {
+        self.cancelled.load(Ordering::SeqCst)
+    }
+
+    /// Returns a future which only resolves once the cancellation signal has been given.
+    pub fn wait(&self) -> impl Future<Output = anyhow::Result<()>> {
+        let future = self.future.clone();
+        async move {
+            future.await.map_err(anyhow::Error::msg)?;
+            Ok(())
+        }
+    }
+}
 
 struct ClientInner {
     sender: mpsc::Sender<crate::jsonrpc::Outgoing>,
@@ -83,11 +171,15 @@ impl Client {
         message: M,
         actions: Option<Vec<lsp::MessageActionItem>>,
     ) -> crate::jsonrpc::Result<Option<lsp::MessageActionItem>> {
-        self.send_request::<lsp::request::ShowMessageRequest>(lsp::ShowMessageRequestParams {
-            typ,
-            message: message.to_string(),
-            actions,
-        })
+        let token = None;
+        self.send_request::<lsp::request::ShowMessageRequest>(
+            lsp::ShowMessageRequestParams {
+                typ,
+                message: message.to_string(),
+                actions,
+            },
+            token,
+        )
         .await
     }
 
@@ -121,8 +213,12 @@ impl Client {
     ///
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
     pub async fn register_capability(&self, registrations: Vec<lsp::Registration>) -> crate::jsonrpc::Result<()> {
-        self.send_request_initialized::<lsp::request::RegisterCapability>(lsp::RegistrationParams { registrations })
-            .await
+        let token = None;
+        self.send_request_initialized::<lsp::request::RegisterCapability>(
+            lsp::RegistrationParams { registrations },
+            token,
+        )
+        .await
     }
 
     /// Unregisters a capability with the client.
@@ -141,9 +237,11 @@ impl Client {
         &self,
         unregisterations: Vec<lsp::Unregistration>,
     ) -> crate::jsonrpc::Result<()> {
-        self.send_request_initialized::<lsp::request::UnregisterCapability>(lsp::UnregistrationParams {
-            unregisterations,
-        })
+        let token = None;
+        self.send_request_initialized::<lsp::request::UnregisterCapability>(
+            lsp::UnregistrationParams { unregisterations },
+            token,
+        )
         .await
     }
 
@@ -167,7 +265,8 @@ impl Client {
     ///
     /// This request was introduced in specification version 3.6.0.
     pub async fn workspace_folders(&self) -> crate::jsonrpc::Result<Option<Vec<lsp::WorkspaceFolder>>> {
-        self.send_request_initialized::<lsp::request::WorkspaceFoldersRequest>(())
+        let token = None;
+        self.send_request_initialized::<lsp::request::WorkspaceFoldersRequest>((), token)
             .await
     }
 
@@ -198,7 +297,8 @@ impl Client {
         &self,
         items: Vec<lsp::ConfigurationItem>,
     ) -> crate::jsonrpc::Result<Vec<serde_json::Value>> {
-        self.send_request_initialized::<lsp::request::WorkspaceConfiguration>(lsp::ConfigurationParams { items })
+        let token = None;
+        self.send_request_initialized::<lsp::request::WorkspaceConfiguration>(lsp::ConfigurationParams { items }, token)
             .await
     }
 
@@ -220,8 +320,12 @@ impl Client {
         edit: lsp::WorkspaceEdit,
         label: Option<String>,
     ) -> crate::jsonrpc::Result<lsp::ApplyWorkspaceEditResponse> {
-        self.send_request_initialized::<lsp::request::ApplyWorkspaceEdit>(lsp::ApplyWorkspaceEditParams { edit, label })
-            .await
+        let token = None;
+        self.send_request_initialized::<lsp::request::ApplyWorkspaceEdit>(
+            lsp::ApplyWorkspaceEditParams { edit, label },
+            token,
+        )
+        .await
     }
 
     /// Submits validation diagnostics for an open file with the given URI.
@@ -280,14 +384,22 @@ impl Client {
     /// # Initialization
     ///
     /// This request will only be sent if the server is initialized.
-    pub async fn send_custom_request<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
+    pub async fn send_custom_request<R>(
+        &self,
+        params: R::Params,
+        token: Option<CancellationToken>,
+    ) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
     {
-        self.send_request_initialized::<R>(params).await
+        self.send_request_initialized::<R>(params, token).await
     }
 
-    async fn send_request<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
+    async fn send_request<R>(
+        &self,
+        params: R::Params,
+        token: Option<CancellationToken>,
+    ) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
     {
@@ -301,23 +413,46 @@ impl Client {
             return Err(crate::jsonrpc::Error::internal_error());
         }
 
-        let response = response_waiter.await;
-        let (_, result) = response.into_parts();
-        result.and_then(|v| {
-            serde_json::from_value(v).map_err(|e| crate::jsonrpc::Error {
-                code: crate::jsonrpc::ErrorCode::ParseError,
-                message: e.to_string(),
-                data: None,
-            })
-        })
+        let mut token_wait = match token {
+            None => future::pending().boxed().fuse(),
+            Some(token) => token.wait().boxed().fuse(),
+        };
+
+        select! {
+            _ = token_wait => {
+                if self.inner.pending_requests.0.remove(&crate::jsonrpc::Id::Number(id)).is_none() {
+                    log::warn!("received response with unknown request ID: {}", id);
+                }
+                let params = {
+                    let id = i32::try_from(id).expect("error converting u64 to i32");
+                    lsp::CancelParams { id: lsp::NumberOrString::Number(id) }
+                };
+                self.send_notification::<lsp::notification::Cancel>(params).await;
+                Err(crate::jsonrpc::Error::request_cancelled())
+            },
+            response = response_waiter.fuse() => {
+                let (_, result) = response.into_parts();
+                result.and_then(|v| {
+                    serde_json::from_value(v).map_err(|e| crate::jsonrpc::Error {
+                        code: crate::jsonrpc::ErrorCode::ParseError,
+                        message: e.to_string(),
+                        data: None,
+                    })
+                })
+            },
+        }
     }
 
-    async fn send_request_initialized<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
+    async fn send_request_initialized<R>(
+        &self,
+        params: R::Params,
+        token: Option<CancellationToken>,
+    ) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
     {
         if let crate::server::StateKind::Initialized | crate::server::StateKind::ShutDown = self.inner.state.get() {
-            self.send_request::<R>(params).await
+            self.send_request::<R>(params, token).await
         } else {
             let id = self.inner.request_id.load(Ordering::SeqCst) + 1;
             let msg = crate::jsonrpc::ClientRequest::request::<R>(id, params);
@@ -354,7 +489,7 @@ mod tests {
 
         pub(super) fn client(initialize: bool) -> (Client, mpsc::Receiver<Outgoing>) {
             let state = Arc::new(crate::server::State::new());
-            let (tx, rx) = mpsc::channel(1);
+            let (tx, rx) = mpsc::channel(4);
             let pending_client = Arc::new(crate::jsonrpc::ClientRequests::new());
             let mut client = crate::client::Client::new(tx, pending_client, state);
             if initialize {
@@ -366,7 +501,7 @@ mod tests {
 
     #[tokio::test]
     async fn apply_edit() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(false);
+        let (client, _rx) = helper::client(false);
 
         let req = {
             let edit = lsp::WorkspaceEdit::default();
@@ -391,7 +526,7 @@ mod tests {
 
     #[tokio::test]
     async fn configuration() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(false);
+        let (client, _rx) = helper::client(false);
 
         let req = {
             let items = Default::default();
@@ -455,7 +590,7 @@ mod tests {
 
     #[tokio::test]
     async fn register_capability() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(true);
+        let (client, _rx) = helper::client(true);
 
         let req = {
             let registrations = Default::default();
@@ -482,6 +617,81 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn send_custom_request() {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Debug, Deserialize, Serialize)]
+        struct CustomRequestParams;
+
+        enum CustomRequest {}
+
+        impl lsp::request::Request for CustomRequest {
+            type Params = CustomRequestParams;
+            type Result = ();
+
+            const METHOD: &'static str = "custom/request";
+        }
+
+        let mut canceller = TokenCanceller::new();
+        let token = Some(canceller.token());
+
+        let (client, _rx) = helper::client(true);
+        let req = {
+            let params = CustomRequestParams;
+            client.send_custom_request::<CustomRequest>(params, token)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+
+        let cancel = async {
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+            canceller.cancel();
+        };
+
+        let (result, (), ()) = futures::future::join3(req, rsp, cancel).await;
+        assert_eq!(result, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn send_custom_request_and_cancel_with_token() {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Debug, Deserialize, Serialize)]
+        struct CustomRequestParams;
+
+        enum CustomRequest {}
+
+        impl lsp::request::Request for CustomRequest {
+            type Params = CustomRequestParams;
+            type Result = ();
+
+            const METHOD: &'static str = "custom/request";
+        }
+
+        let mut canceller = TokenCanceller::new();
+        let token = Some(canceller.token());
+
+        let (client, _rx) = helper::client(true);
+        let req = {
+            let params = CustomRequestParams;
+            client.send_custom_request::<CustomRequest>(params, token)
+        };
+        let rsp = async {
+            let id = Id::Number(0);
+            let result = serde_json::to_value(()).unwrap();
+            client.inner.pending_requests.insert(Response::ok(id, result));
+        };
+
+        canceller.cancel();
+
+        let (result, ()) = futures::future::join(req, rsp).await;
+        assert_eq!(result, Err(crate::jsonrpc::Error::request_cancelled()));
+    }
+
+    #[tokio::test]
     async fn show_message() {
         let (client, mut rx) = helper::client(true);
         let typ = lsp::MessageType::Info;
@@ -496,7 +706,7 @@ mod tests {
 
     #[tokio::test]
     async fn show_message_request() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(true);
+        let (client, _rx) = helper::client(true);
 
         let typ = lsp::MessageType::Info;
         let message = String::default();
@@ -527,7 +737,7 @@ mod tests {
 
     #[tokio::test]
     async fn unregister_capability() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(true);
+        let (client, _rx) = helper::client(true);
 
         let req = {
             let unregistrations = Default::default();
@@ -546,7 +756,7 @@ mod tests {
 
     #[tokio::test]
     async fn workspace_folders() -> anyhow::Result<()> {
-        let (client, mut _rx) = helper::client(true);
+        let (client, _rx) = helper::client(true);
 
         let req = client.workspace_folders();
         let rsp = async {

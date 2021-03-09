@@ -59,10 +59,11 @@ impl LanguageServer for Backend {
 
     async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<Value>> {
         if params.command == "custom.request" {
-            let result = self
-                .client
-                .send_custom_request::<CustomRequest>(CustomRequestParams::new("Hello", "Message"))
-                .await?;
+            let result = {
+                let params = CustomRequestParams::new("Hello", "Message");
+                let token = None;
+                self.client.send_custom_request::<CustomRequest>(params, token).await?
+            };
             self.client
                 .log_message(
                     MessageType::Info,

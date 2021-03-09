@@ -16,7 +16,7 @@ mod service;
 mod transport;
 
 pub use self::{
-    client::Client,
+    client::{CancellationToken, Client, TokenCanceller},
     service::{ExitedError, LspService, MessageStream},
     transport::Server,
 };
