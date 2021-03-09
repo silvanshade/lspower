@@ -275,6 +275,18 @@ impl Client {
         }
     }
 
+    /// Sends a custom request to the client.
+    ///
+    /// # Initialization
+    ///
+    /// This request will only be sent if the server is initialized.
+    pub async fn send_custom_request<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
+    where
+        R: lsp::request::Request,
+    {
+        self.send_request_initialized::<R>(params).await
+    }
+
     async fn send_request<R>(&self, params: R::Params) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
