@@ -142,7 +142,7 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                 // Placeholder used for parsing headers into
                 let dst = &mut [httparse::EMPTY_HEADER; 2];
 
-                // Parse the headers and try to extract values for the previous mut vars
+                // Parse the headers and try to extract values
                 match httparse::parse_headers(src, dst) {
                     // A complete set of headers was parsed succesfully
                     Ok(httparse::Status::Complete((header_len, headers))) => {
