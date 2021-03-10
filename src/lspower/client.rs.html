@@ -849,15 +849,12 @@
 <span id="846">846</span>
 <span id="847">847</span>
 <span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for sending data to and from the language client.</span>
 
 <span class="kw">use</span> <span class="ident">futures</span>::{
     <span class="ident">channel</span>::{<span class="ident">mpsc</span>, <span class="ident">oneshot</span>},
-    <span class="ident">future</span>,
+    <span class="ident">future</span>::{<span class="self">self</span>, <span class="ident">Shared</span>},
     <span class="ident">select</span>,
     <span class="ident">sink</span>::<span class="ident">SinkExt</span>,
     <span class="ident">FutureExt</span>,
@@ -873,10 +870,12 @@
     },
 };
 
+<span class="kw">type</span> <span class="ident">TokenFuture</span> <span class="op">=</span> <span class="ident">Shared</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">oneshot</span>::<span class="ident">Canceled</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
 <span class="doccomment">/// A structure used to construct and cancel [`CancellationToken`].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenCanceller</span> {
     <span class="ident">cancelled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    <span class="ident">future</span>: <span class="ident">future</span>::<span class="ident">Shared</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">oneshot</span>::<span class="ident">Canceled</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">future</span>: <span class="ident">TokenFuture</span>,
     <span class="ident">sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
@@ -931,7 +930,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CancellationToken</span> {
     <span class="ident">cancelled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    <span class="ident">future</span>: <span class="ident">future</span>::<span class="ident">Shared</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">oneshot</span>::<span class="ident">Canceled</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">future</span>: <span class="ident">TokenFuture</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">CancellationToken</span> {
@@ -941,12 +940,16 @@
     }
 
     <span class="doccomment">/// Returns a future which only resolves once the cancellation signal has been given.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">future</span>.<span class="ident">clone</span>();
-        <span class="kw">async</span> <span class="kw">move</span> {
-            <span class="ident">future</span>.<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">anyhow</span>::<span class="ident">Error</span>::<span class="ident">msg</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(())
-        }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wait</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenFuture</span> {
+        <span class="self">self</span>.<span class="ident">future</span>.<span class="ident">clone</span>()
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">CancellationToken</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">cancelled</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">pending</span>().<span class="ident">boxed</span>().<span class="ident">shared</span>();
+        <span class="ident">CancellationToken</span> { <span class="ident">cancelled</span>, <span class="ident">future</span> }
     }
 }
 
@@ -1021,7 +1024,7 @@
         <span class="ident">message</span>: <span class="ident">M</span>,
         <span class="ident">actions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ShowMessageRequestParams</span> { <span class="ident">typ</span>, <span class="ident">message</span>, <span class="ident">actions</span> };
         <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ShowMessageRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
@@ -1058,7 +1061,7 @@
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
     <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">registrations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Registration</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">RegistrationParams</span> { <span class="ident">registrations</span> };
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">RegisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
@@ -1080,7 +1083,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">unregisterations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Unregistration</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">UnregistrationParams</span> { <span class="ident">unregisterations</span> };
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">UnregisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
@@ -1106,7 +1109,7 @@
     <span class="doccomment">/// This request was introduced in specification version 3.6.0.</span>
     <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceFoldersRequest</span><span class="op">&gt;</span>((), <span class="ident">token</span>).<span class="kw">await</span>
     }
 
@@ -1138,7 +1141,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ConfigurationItem</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ConfigurationParams</span> { <span class="ident">items</span> };
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceConfiguration</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
@@ -1162,7 +1165,7 @@
         <span class="ident">edit</span>: <span class="ident">lsp</span>::<span class="ident">WorkspaceEdit</span>,
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditParams</span> { <span class="ident">edit</span>, <span class="ident">label</span> };
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
@@ -1225,7 +1228,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>,
-        <span class="ident">token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CancellationToken</span><span class="op">&gt;</span>,
+        <span class="ident">token</span>: <span class="ident">CancellationToken</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
@@ -1233,11 +1236,7 @@
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>,
-        <span class="ident">token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CancellationToken</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>, <span class="ident">token</span>: <span class="ident">CancellationToken</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
     {
@@ -1251,13 +1250,8 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">internal_error</span>());
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token_wait</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">token</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">future</span>::<span class="ident">pending</span>().<span class="ident">boxed</span>().<span class="ident">fuse</span>(),
-            <span class="prelude-val">Some</span>(<span class="ident">token</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">token</span>.<span class="ident">wait</span>().<span class="ident">boxed</span>().<span class="ident">fuse</span>(),
-        };
-
         <span class="macro">select</span><span class="macro">!</span> {
-            <span class="kw">_</span> <span class="op">=</span> <span class="ident">token_wait</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> <span class="op">=</span> <span class="ident">token</span>.<span class="ident">wait</span>() <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="number">0</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Id</span>::<span class="ident">Number</span>(<span class="ident">id</span>)).<span class="ident">is_none</span>() {
                     <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;received response with unknown request ID: {}&quot;</span>, <span class="ident">id</span>);
                 }
@@ -1284,7 +1278,7 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request_initialized</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>,
-        <span class="ident">token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CancellationToken</span><span class="op">&gt;</span>,
+        <span class="ident">token</span>: <span class="ident">CancellationToken</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
@@ -1511,7 +1505,7 @@
             }
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">canceller</span>.<span class="ident">token</span>());
+            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">canceller</span>.<span class="ident">token</span>();
 
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
@@ -1551,7 +1545,7 @@
 
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+                <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="ident">client</span>.<span class="ident">send_custom_request</span>::<span class="op">&lt;</span><span class="ident">CustomRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>)
             };
@@ -1588,7 +1582,7 @@
             }
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">canceller</span>.<span class="ident">token</span>());
+            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">canceller</span>.<span class="ident">token</span>();
 
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
