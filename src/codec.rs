@@ -153,17 +153,13 @@ impl<T: serde::de::DeserializeOwned> Decoder for LanguageServerCodec<T> {
                             // If the "Content-Length" header is found, parse the value as a usize
                             if header.name == "Content-Length" {
                                 let content_len = std::str::from_utf8(header.value)?;
-                                let content_len =
-                                    content_len.parse::<usize>().map_err(|_| ParseError::InvalidLength)?;
+                                let content_len = content_len.parse().map_err(|_| ParseError::InvalidLength)?;
                                 self.content_len = Some(content_len);
                             }
                         }
                     },
                     // No errors occurred during parsing yet but no complete set of headers were parsed
-                    Ok(httparse::Status::Partial) => {
-                        // Return and wait for more input
-                        return Ok(None);
-                    },
+                    Ok(httparse::Status::Partial) => return Ok(None),
                     // An error occurred during parsing of the headers
                     Err(error) => {
                         self.http_error = Some(error);
@@ -248,6 +244,20 @@ mod tests {
     }
 
     #[test]
+    fn decode_long_messages() {
+        let padding = "data".repeat(5000);
+        let decoded = format!(r#"{{ "jsonrpc" : "2.0", "method" : "foo", "params": "{}" }}"#, padding);
+        let content_len = format!("Content-Length: {}", decoded.len());
+        let encoded = format!("{}\r\n\r\n{}", content_len, decoded);
+
+        let mut codec = LanguageServerCodec::default();
+        let mut buffer = BytesMut::from(encoded.as_str());
+        let message = codec.decode(&mut buffer).unwrap();
+        let decoded: Value = serde_json::from_str(&decoded).unwrap();
+        assert_eq!(message, Some(decoded));
+    }
+
+    #[test]
     fn decode_optional_content_type() {
         let decoded = r#"{"jsonrpc":"2.0","method":"exit"}"#.to_string();
         let content_len = format!("Content-Length: {}", decoded.len());
@@ -321,10 +331,7 @@ mod tests {
         let mut codec = LanguageServerCodec::default();
         let mut buffer = BytesMut::from(mixed.as_str());
 
-        match codec.decode(&mut buffer) {
-            Err(ParseError::MissingHeader) => {},
-            other => panic!("expected `Err(ParseError::MissingHeader)`, got {:?}", other),
-        }
+        assert!(matches!(codec.decode(&mut buffer), Err(ParseError::MissingHeader)));
 
         let message = codec.decode(&mut buffer).unwrap();
         let decoded: Value = serde_json::from_str(&decoded).unwrap();

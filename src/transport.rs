@@ -189,12 +189,17 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn serves_on_stdio() {
-        let (mut stdin, mut stdout) = mock_stdio();
+    async fn handles_invalid_json() {
+        let invalid = r#"{"jsonrpc":"2.0","method":"#;
+        let message = format!("Content-Length: {}\r\n\r\n{}", invalid.len(), invalid).into_bytes();
+        let (mut stdin, mut stdout) = (Cursor::new(message), Vec::new());
+
         Server::new(&mut stdin, &mut stdout).serve(MockService).await;
 
-        assert_eq!(stdin.position(), 80);
-        assert_eq!(stdout, mock_response());
+        assert_eq!(stdin.position(), 48);
+        let err = r#"{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}"#;
+        let output = format!("Content-Length: {}\r\n\r\n{}", err.len(), err).into_bytes();
+        assert_eq!(stdout, output);
     }
 
     #[tokio::test]
@@ -214,16 +219,51 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn handles_invalid_json() {
-        let invalid = r#"{"jsonrpc":"2.0","method":"#;
-        let message = format!("Content-Length: {}\r\n\r\n{}", invalid.len(), invalid).into_bytes();
-        let (mut stdin, mut stdout) = (Cursor::new(message), Vec::new());
-
+    async fn serves_on_stdio() {
+        let (mut stdin, mut stdout) = mock_stdio();
         Server::new(&mut stdin, &mut stdout).serve(MockService).await;
 
-        assert_eq!(stdin.position(), 48);
-        let err = r#"{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}"#;
-        let output = format!("Content-Length: {}\r\n\r\n{}", err.len(), err).into_bytes();
-        assert_eq!(stdout, output);
+        assert_eq!(stdin.position(), 80);
+        assert_eq!(stdout, mock_response());
+    }
+
+    #[derive(Debug)]
+    struct CustomError;
+
+    impl std::fmt::Display for CustomError {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "CustomError")
+        }
+    }
+
+    impl std::error::Error for CustomError {
+    }
+
+    #[derive(Debug)]
+    struct CustomErrorWithSource(CustomError);
+
+    impl std::fmt::Display for CustomErrorWithSource {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "CustomErrorWithSource")
+        }
+    }
+
+    impl std::error::Error for CustomErrorWithSource {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            Some(&self.0)
+        }
+    }
+
+    #[test]
+    fn display_sources_with_source() {
+        let error = CustomError;
+        let error = CustomErrorWithSource(error);
+        assert_eq!("CustomErrorWithSource: CustomError", display_sources(&error));
+    }
+
+    #[test]
+    fn display_sources_without_source() {
+        let error = CustomError;
+        assert_eq!("CustomError", display_sources(&error));
     }
 }

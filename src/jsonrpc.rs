@@ -244,6 +244,17 @@ pub(crate) fn not_initialized_error() -> Error {
 mod tests {
     use super::*;
 
+    mod client_request {
+        use super::*;
+
+        #[test]
+        fn display() {
+            let id = 0;
+            let request = ClientRequest::request::<lsp::request::Shutdown>(id, ());
+            format!("{}", request);
+        }
+    }
+
     mod id {
         use super::*;
 
