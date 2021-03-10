@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 //! Types for sending data to and from the language client.
 
 use futures::{
@@ -474,8 +472,6 @@ impl Debug for Client {
 
 #[cfg(test)]
 mod tests {
-    #![allow(unused)]
-
     use super::*;
     use crate::jsonrpc::{ClientRequest, Id, Outgoing, Response};
     use futures::StreamExt;
