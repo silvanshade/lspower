@@ -27,15 +27,6 @@ pub struct TokenCanceller {
     sender: Option<oneshot::Sender<()>>,
 }
 
-impl Debug for TokenCanceller {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.debug_struct(stringify!(LspService))
-            .field("cancelled", &self.cancelled)
-            .field("sender", &self.sender)
-            .finish()
-    }
-}
-
 impl TokenCanceller {
     /// Creates a new [`TokenCanceller`].
     pub fn new() -> Self {
@@ -65,6 +56,15 @@ impl TokenCanceller {
         let cancelled = self.cancelled.clone();
         let future = self.future.clone();
         CancellationToken { cancelled, future }
+    }
+}
+
+impl Debug for TokenCanceller {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.debug_struct(stringify!(LspService))
+            .field("cancelled", &self.cancelled)
+            .field("sender", &self.sender)
+            .finish()
     }
 }
 
