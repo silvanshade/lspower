@@ -81,13 +81,15 @@ async fn main() {
 The main differences between these crates are the following:
 
 * `lspower` is currently maintained while `tower-lsp` development seems to have stopped
-* `lspower` has had a number of small refactorings and bug-fixes since the fork
-* `lspower` has fewer dependencies than `tower-lsp` (from replacing `nom` with `httparse`)
-* `lspower` is supports the current LSP spec including more features like semantic tokens
+* `lspower` has had several significant refactorings and bug-fixes since the fork
+* `lspower` supports the current LSP spec including more features like semantic tokens
 * `lspower` supports sending custom requests from server to client
 * `lspower` supports cancellation tokens (and server to client `$/cancelRequest` notifications)
 * `lspower` doesn't *require* `tokio` but also works with `async-std`, `smol`, and `futures`
-* `lspower` works for WASM targets (resolving issue: [tower-lsp#187](https://github.com/ebkalderon/tower-lsp/issues/187))
+* `lspower` is compatible with WASM targets (resolving: [tower-lsp#187](https://github.com/ebkalderon/tower-lsp/issues/187))
+* `lspower` has fewer dependencies (from replacing `nom` with `httparse`)
+* `lspower` parses message streams more efficiently and minimizes unnecessary reparsing
+* `lspower` recovers faster from malformed messages (SIMD accelerated via `twoway`)
 
 ## Using lspower with runtimes other than tokio
 
