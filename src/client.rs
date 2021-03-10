@@ -2,7 +2,7 @@
 
 use futures::{
     channel::{mpsc, oneshot},
-    future,
+    future::{self, Shared},
     select,
     sink::SinkExt,
     FutureExt,
@@ -18,10 +18,12 @@ use std::{
     },
 };
 
+type TokenFuture = Shared<Pin<Box<dyn Future<Output = Result<(), oneshot::Canceled>> + Send>>>;
+
 /// A structure used to construct and cancel [`CancellationToken`].
 pub struct TokenCanceller {
     cancelled: Arc<AtomicBool>,
-    future: future::Shared<Pin<Box<dyn Future<Output = Result<(), oneshot::Canceled>> + Send>>>,
+    future: TokenFuture,
     sender: Option<oneshot::Sender<()>>,
 }
 
@@ -76,7 +78,7 @@ impl Default for TokenCanceller {
 #[derive(Debug, Clone)]
 pub struct CancellationToken {
     cancelled: Arc<AtomicBool>,
-    future: future::Shared<Pin<Box<dyn Future<Output = Result<(), oneshot::Canceled>> + Send>>>,
+    future: TokenFuture,
 }
 
 impl CancellationToken {
@@ -86,12 +88,16 @@ impl CancellationToken {
     }
 
     /// Returns a future which only resolves once the cancellation signal has been given.
-    pub fn wait(&self) -> impl Future<Output = anyhow::Result<()>> {
-        let future = self.future.clone();
-        async move {
-            future.await.map_err(anyhow::Error::msg)?;
-            Ok(())
-        }
+    pub fn wait(&self) -> TokenFuture {
+        self.future.clone()
+    }
+}
+
+impl Default for CancellationToken {
+    fn default() -> Self {
+        let cancelled = Default::default();
+        let future = future::pending().boxed().shared();
+        CancellationToken { cancelled, future }
     }
 }
 
@@ -166,7 +172,7 @@ impl Client {
         message: M,
         actions: Option<Vec<lsp::MessageActionItem>>,
     ) -> crate::jsonrpc::Result<Option<lsp::MessageActionItem>> {
-        let token = None;
+        let token = CancellationToken::default();
         let message = message.to_string();
         let params = lsp::ShowMessageRequestParams { typ, message, actions };
         self.send_request::<lsp::request::ShowMessageRequest>(params, token).await
@@ -203,7 +209,7 @@ impl Client {
     /// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize
     #[rustfmt::skip]
     pub async fn register_capability(&self, registrations: Vec<lsp::Registration>) -> crate::jsonrpc::Result<()> {
-        let token = None;
+        let token = CancellationToken::default();
         let params = lsp::RegistrationParams { registrations };
         self.send_request_initialized::<lsp::request::RegisterCapability>(params, token).await
     }
@@ -225,7 +231,7 @@ impl Client {
         &self,
         unregisterations: Vec<lsp::Unregistration>,
     ) -> crate::jsonrpc::Result<()> {
-        let token = None;
+        let token = CancellationToken::default();
         let params = lsp::UnregistrationParams { unregisterations };
         self.send_request_initialized::<lsp::request::UnregisterCapability>(params, token).await
     }
@@ -251,7 +257,7 @@ impl Client {
     /// This request was introduced in specification version 3.6.0.
     #[rustfmt::skip]
     pub async fn workspace_folders(&self) -> crate::jsonrpc::Result<Option<Vec<lsp::WorkspaceFolder>>> {
-        let token = None;
+        let token = CancellationToken::default();
         self.send_request_initialized::<lsp::request::WorkspaceFoldersRequest>((), token).await
     }
 
@@ -283,7 +289,7 @@ impl Client {
         &self,
         items: Vec<lsp::ConfigurationItem>,
     ) -> crate::jsonrpc::Result<Vec<serde_json::Value>> {
-        let token = None;
+        let token = CancellationToken::default();
         let params = lsp::ConfigurationParams { items };
         self.send_request_initialized::<lsp::request::WorkspaceConfiguration>(params, token).await
     }
@@ -307,7 +313,7 @@ impl Client {
         edit: lsp::WorkspaceEdit,
         label: Option<String>,
     ) -> crate::jsonrpc::Result<lsp::ApplyWorkspaceEditResponse> {
-        let token = None;
+        let token = CancellationToken::default();
         let params = lsp::ApplyWorkspaceEditParams { edit, label };
         self.send_request_initialized::<lsp::request::ApplyWorkspaceEdit>(params, token).await
     }
@@ -370,7 +376,7 @@ impl Client {
     pub async fn send_custom_request<R>(
         &self,
         params: R::Params,
-        token: Option<CancellationToken>,
+        token: CancellationToken,
     ) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
@@ -378,11 +384,7 @@ impl Client {
         self.send_request_initialized::<R>(params, token).await
     }
 
-    async fn send_request<R>(
-        &self,
-        params: R::Params,
-        token: Option<CancellationToken>,
-    ) -> crate::jsonrpc::Result<R::Result>
+    async fn send_request<R>(&self, params: R::Params, token: CancellationToken) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
     {
@@ -396,13 +398,8 @@ impl Client {
             return Err(crate::jsonrpc::Error::internal_error());
         }
 
-        let mut token_wait = match token {
-            None => future::pending().boxed().fuse(),
-            Some(token) => token.wait().boxed().fuse(),
-        };
-
         select! {
-            _ = token_wait => {
+            _ = token.wait() => {
                 if self.inner.pending_requests.0.remove(&crate::jsonrpc::Id::Number(id)).is_none() {
                     log::warn!("received response with unknown request ID: {}", id);
                 }
@@ -429,7 +426,7 @@ impl Client {
     async fn send_request_initialized<R>(
         &self,
         params: R::Params,
-        token: Option<CancellationToken>,
+        token: CancellationToken,
     ) -> crate::jsonrpc::Result<R::Result>
     where
         R: lsp::request::Request,
@@ -656,7 +653,7 @@ mod tests {
             }
 
             let mut canceller = TokenCanceller::new();
-            let token = Some(canceller.token());
+            let token = canceller.token();
 
             let (client, _rx) = helper::client(true);
             let req = {
@@ -696,7 +693,7 @@ mod tests {
 
             let (client, _rx) = helper::client(true);
             let req = {
-                let token = None;
+                let token = CancellationToken::default();
                 let params = CustomRequestParams;
                 client.send_custom_request::<CustomRequest>(params, token)
             };
@@ -733,7 +730,7 @@ mod tests {
             }
 
             let mut canceller = TokenCanceller::new();
-            let token = Some(canceller.token());
+            let token = canceller.token();
 
             let (client, _rx) = helper::client(true);
             let req = {

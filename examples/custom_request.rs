@@ -1,6 +1,7 @@
 use lspower::{
     jsonrpc::{Error, Result},
     lsp::{request::Request, *},
+    CancellationToken,
     Client,
     LanguageServer,
     LspService,
@@ -61,7 +62,7 @@ impl LanguageServer for Backend {
         if params.command == "custom.request" {
             let result = {
                 let params = CustomRequestParams::new("Hello", "Message");
-                let token = None;
+                let token = CancellationToken::default();
                 self.client.send_custom_request::<CustomRequest>(params, token).await?
             };
             self.client
