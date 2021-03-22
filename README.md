@@ -5,12 +5,12 @@
       implementation for Rust based on <a href="https://github.com/tower-rs/tower">Tower</a></strong>
   </p>
   <p style="margin-bottom: 0.5ex;">
-    <a href="https://hvithrafn.github.io/lspower/lspower"><img
+    <a href="https://silvanshade.github.io/lspower/lspower"><img
         src="https://img.shields.io/badge/docs-latest-blueviolet?logo=Read-the-docs&logoColor=white" /></a>
-    <a href="https://github.com/hvithrafn/lspower/actions"><img
-        src="https://github.com/hvithrafn/lspower/workflows/main/badge.svg" /></a>
-    <a href="https://codecov.io/gh/hvithrafn/lspower"><img
-        src="https://codecov.io/gh/hvithrafn/lspower/branches/main/graph/badge.svg" /></a>
+    <a href="https://github.com/silvanshade/lspower/actions"><img
+        src="https://github.com/silvanshade/lspower/workflows/main/badge.svg" /></a>
+    <a href="https://codecov.io/gh/silvanshade/lspower"><img
+        src="https://codecov.io/gh/silvanshade/lspower/branches/main/graph/badge.svg" /></a>
   </p>
 </div>
 

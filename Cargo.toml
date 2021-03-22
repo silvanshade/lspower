@@ -2,9 +2,9 @@
 edition = "2018"
 name = "lspower"
 version = "1.0.0"
-authors = ["hvithrafn <hvithrafn@users.noreply.github.com>", "Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
+authors = ["silvanshade <silvanshade@users.noreply.github.com>", "Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
 license = "Apache-2.0 WITH LLVM-exception"
-repository = "https://github.com/hvithrafn/lspower"
+repository = "https://github.com/silvanshade/lspower"
 documentation = "https://docs.rs/lspower/"
 readme = "README.md"
 categories = ["asynchronous"]
