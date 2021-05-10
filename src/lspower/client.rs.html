@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../lspower/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../lspower/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -856,34 +856,34 @@
     <span class="ident">channel</span>::{<span class="ident">mpsc</span>, <span class="ident">oneshot</span>},
     <span class="ident">future</span>::{<span class="self">self</span>, <span class="ident">Shared</span>},
     <span class="ident">select</span>,
-    <span class="ident">sink</span>::<span class="ident">SinkExt</span>,
+    <span class="ident">sink::SinkExt</span>,
     <span class="ident">FutureExt</span>,
 };
 <span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">convert</span>::<span class="ident">TryFrom</span>,
+    <span class="ident">convert::TryFrom</span>,
     <span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>},
-    <span class="ident">future</span>::<span class="ident">Future</span>,
-    <span class="ident">pin</span>::<span class="ident">Pin</span>,
+    <span class="ident">future::Future</span>,
+    <span class="ident">pin::Pin</span>,
     <span class="ident">sync</span>::{
         <span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>},
         <span class="ident">Arc</span>,
     },
 };
 
-<span class="kw">type</span> <span class="ident">TokenFuture</span> <span class="op">=</span> <span class="ident">Shared</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">oneshot</span>::<span class="ident">Canceled</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">TokenFuture</span> <span class="op">=</span> <span class="ident">Shared</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">oneshot::Canceled</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A structure used to construct and cancel [`CancellationToken`].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenCanceller</span> {
     <span class="ident">cancelled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">future</span>: <span class="ident">TokenFuture</span>,
-    <span class="ident">sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">oneshot::Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TokenCanceller</span> {
     <span class="doccomment">/// Creates a new [`TokenCanceller`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">cancelled</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>));
-        <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">oneshot</span>::<span class="ident">channel</span>();
+        <span class="kw">let</span> <span class="ident">cancelled</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>));
+        <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">oneshot::channel</span>();
         <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident">receiver</span>.<span class="ident">boxed</span>().<span class="ident">shared</span>();
         <span class="ident">TokenCanceller</span> {
             <span class="ident">cancelled</span>,
@@ -896,9 +896,9 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cancel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sender</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">take</span>() {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(()) <span class="op">=</span> <span class="ident">sender</span>.<span class="ident">send</span>(()) {
-                <span class="self">self</span>.<span class="ident">cancelled</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+                <span class="self">self</span>.<span class="ident">cancelled</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>);
             } <span class="kw">else</span> {
-                <span class="macro">unreachable</span><span class="macro">!</span>()
+                <span class="macro">unreachable!</span>()
             }
         }
     }
@@ -912,8 +912,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">TokenCanceller</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify</span><span class="macro">!</span>(<span class="ident">LspService</span>))
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify!</span>(<span class="ident">LspService</span>))
             .<span class="ident">field</span>(<span class="string">&quot;cancelled&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cancelled</span>)
             .<span class="ident">field</span>(<span class="string">&quot;sender&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sender</span>)
             .<span class="ident">finish</span>()
@@ -922,7 +922,7 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TokenCanceller</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">new</span>()
+        <span class="self">Self</span><span class="ident">::new</span>()
     }
 }
 
@@ -936,7 +936,7 @@
 <span class="kw">impl</span> <span class="ident">CancellationToken</span> {
     <span class="doccomment">/// Checks whether the cancellation signal has been given.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_cancelled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">cancelled</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>)
+        <span class="self">self</span>.<span class="ident">cancelled</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
     }
 
     <span class="doccomment">/// Returns a future which only resolves once the cancellation signal has been given.</span>
@@ -947,17 +947,17 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">CancellationToken</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">cancelled</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident">future</span>::<span class="ident">pending</span>().<span class="ident">boxed</span>().<span class="ident">shared</span>();
+        <span class="kw">let</span> <span class="ident">cancelled</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident">future::pending</span>().<span class="ident">boxed</span>().<span class="ident">shared</span>();
         <span class="ident">CancellationToken</span> { <span class="ident">cancelled</span>, <span class="ident">future</span> }
     }
 }
 
 <span class="kw">struct</span> <span class="ident">ClientInner</span> {
-    <span class="ident">sender</span>: <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
+    <span class="ident">sender</span>: <span class="ident">mpsc::Sender</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::jsonrpc::Outgoing</span><span class="op">&gt;</span>,
     <span class="ident">request_id</span>: <span class="ident">AtomicU64</span>,
-    <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequests</span><span class="op">&gt;</span>,
-    <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">State</span><span class="op">&gt;</span>,
+    <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequests</span><span class="op">&gt;</span>,
+    <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::server::State</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Handle for communicating with the language client.</span>
@@ -973,14 +973,14 @@
 
 <span class="kw">impl</span> <span class="ident">Client</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">sender</span>: <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span><span class="op">&gt;</span>,
-        <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequests</span><span class="op">&gt;</span>,
-        <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">State</span><span class="op">&gt;</span>,
+        <span class="ident">sender</span>: <span class="ident">mpsc::Sender</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::jsonrpc::Outgoing</span><span class="op">&gt;</span>,
+        <span class="ident">pending_requests</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequests</span><span class="op">&gt;</span>,
+        <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::server::State</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Client</span> {
-            <span class="ident">inner</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">ClientInner</span> {
+            <span class="ident">inner</span>: <span class="ident">Arc::new</span>(<span class="ident">ClientInner</span> {
                 <span class="ident">sender</span>,
-                <span class="ident">request_id</span>: <span class="ident">AtomicU64</span>::<span class="ident">new</span>(<span class="number">0</span>),
+                <span class="ident">request_id</span>: <span class="ident">AtomicU64::new</span>(<span class="number">0</span>),
                 <span class="ident">pending_requests</span>,
                 <span class="ident">state</span>,
             }),
@@ -992,10 +992,10 @@
     <span class="doccomment">/// This corresponds to the [`window/logMessage`] notification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`window/logMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_logMessage</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std::fmt::Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp::MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">LogMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
-        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">LogMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::LogMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
+        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::LogMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
     }
 
     <span class="doccomment">/// Notifies the client to display a particular message in the user interface.</span>
@@ -1003,10 +1003,10 @@
     <span class="doccomment">/// This corresponds to the [`window/showMessage`] notification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`window/showMessage`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessage</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std::fmt::Display</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">lsp::MessageType</span>, <span class="ident">message</span>: <span class="ident">M</span>) {
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ShowMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
-        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">ShowMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ShowMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
+        <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::ShowMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
     }
 
     <span class="doccomment">/// Requests the client to display a particular message in the user interface.</span>
@@ -1017,17 +1017,17 @@
     <span class="doccomment">/// This corresponds to the [`window/showMessageRequest`] request.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`window/showMessageRequest`]: https://microsoft.github.io/language-server-protocol/specification#window_showMessageRequest</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">std::fmt::Display</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">typ</span>: <span class="ident">lsp</span>::<span class="ident">MessageType</span>,
+        <span class="ident">typ</span>: <span class="ident">lsp::MessageType</span>,
         <span class="ident">message</span>: <span class="ident">M</span>,
-        <span class="ident">actions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
+        <span class="ident">actions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">lsp::MessageActionItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ShowMessageRequestParams</span> { <span class="ident">typ</span>, <span class="ident">message</span>, <span class="ident">actions</span> };
-        <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ShowMessageRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ShowMessageRequestParams</span> { <span class="ident">typ</span>, <span class="ident">message</span>, <span class="ident">actions</span> };
+        <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">lsp::request::ShowMessageRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Notifies the client to log a telemetry event.</span>
@@ -1035,14 +1035,14 @@
     <span class="doccomment">/// This corresponds to the [`telemetry/event`] notification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`telemetry/event`]: https://microsoft.github.io/language-server-protocol/specification#telemetry_event</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">telemetry_event</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">serde</span>::<span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">S</span>) {
-        <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">data</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;invalid JSON in `telemetry/event` notification: {}&quot;</span>, <span class="ident">e</span>),
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">telemetry_event</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">serde::Serialize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">S</span>) {
+        <span class="kw">match</span> <span class="ident">serde_json::to_value</span>(<span class="ident">data</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">log::error!</span>(<span class="string">&quot;invalid JSON in `telemetry/event` notification: {}&quot;</span>, <span class="ident">e</span>),
             <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_null</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_array</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_object</span>() {
-                    <span class="ident">value</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">Value</span>::<span class="ident">Array</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">value</span>]);
+                    <span class="ident">value</span> <span class="op">=</span> <span class="ident">serde_json::Value::Array</span>(<span class="macro">vec!</span>[<span class="ident">value</span>]);
                 }
-                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">value</span>).<span class="kw">await</span>;
+                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">value</span>).<span class="kw">await</span>;
             },
         }
     }
@@ -1059,11 +1059,11 @@
     <span class="doccomment">/// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">registrations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Registration</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">RegistrationParams</span> { <span class="ident">registrations</span> };
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">RegisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">registrations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::Registration</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::RegistrationParams</span> { <span class="ident">registrations</span> };
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::RegisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Unregisters a capability with the client.</span>
@@ -1078,14 +1078,14 @@
     <span class="doccomment">/// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unregister_capability</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">unregisterations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Unregistration</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">UnregistrationParams</span> { <span class="ident">unregisterations</span> };
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">UnregisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
+        <span class="ident">unregisterations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::Unregistration</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::UnregistrationParams</span> { <span class="ident">unregisterations</span> };
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::UnregisterCapability</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Fetches the current open list of workspace folders.</span>
@@ -1107,10 +1107,10 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This request was introduced in specification version 3.6.0.</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceFoldersRequest</span><span class="op">&gt;</span>((), <span class="ident">token</span>).<span class="kw">await</span>
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::WorkspaceFoldersRequest</span><span class="op">&gt;</span>((), <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Fetches configuration settings from the client.</span>
@@ -1136,14 +1136,14 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This request was introduced in specification version 3.6.0.</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configuration</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ConfigurationItem</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ConfigurationParams</span> { <span class="ident">items</span> };
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">WorkspaceConfiguration</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
+        <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::ConfigurationItem</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ConfigurationParams</span> { <span class="ident">items</span> };
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::WorkspaceConfiguration</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Requests a workspace resource be edited on the client side and returns whether the edit was</span>
@@ -1159,15 +1159,15 @@
     <span class="doccomment">/// immediately return `Err` with JSON-RPC error code `-32002` ([read more]).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [read more]: https://microsoft.github.io/language-server-protocol/specification#initialize</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_edit</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">edit</span>: <span class="ident">lsp</span>::<span class="ident">WorkspaceEdit</span>,
+        <span class="ident">edit</span>: <span class="ident">lsp::WorkspaceEdit</span>,
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditParams</span> { <span class="ident">edit</span>, <span class="ident">label</span> };
-        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">lsp::ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ApplyWorkspaceEditParams</span> { <span class="ident">edit</span>, <span class="ident">label</span> };
+        <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Submits validation diagnostics for an open file with the given URI.</span>
@@ -1179,10 +1179,10 @@
     <span class="doccomment">/// # Initialization</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This notification will only be sent if the server is initialized.</span>
-    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">publish_diagnostics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">uri</span>: <span class="ident">lsp</span>::<span class="ident">Url</span>, <span class="ident">diags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Diagnostic</span><span class="op">&gt;</span>, <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">PublishDiagnosticsParams</span>::<span class="ident">new</span>(<span class="ident">uri</span>, <span class="ident">diags</span>, <span class="ident">version</span>);
-        <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">PublishDiagnostics</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
+    <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">publish_diagnostics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">uri</span>: <span class="ident">lsp::Url</span>, <span class="ident">diags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::Diagnostic</span><span class="op">&gt;</span>, <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::PublishDiagnosticsParams::new</span>(<span class="ident">uri</span>, <span class="ident">diags</span>, <span class="ident">version</span>);
+        <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::PublishDiagnostics</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
     }
 
     <span class="doccomment">/// Sends a custom notification to the client.</span>
@@ -1190,33 +1190,33 @@
     <span class="doccomment">/// # Initialization</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This notification will only be sent if the server is initialized.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N::Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp::notification::Notification</span>,
     {
         <span class="self">self</span>.<span class="ident">send_notification_initialized</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N::Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp::notification::Notification</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>));
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Outgoing::Request</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>));
         <span class="kw">if</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
-            <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send notification&quot;</span>)
+            <span class="macro">log::error!</span>(<span class="string">&quot;failed to send notification&quot;</span>)
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification_initialized</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N</span>::<span class="ident">Params</span>)
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification_initialized</span><span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">N::Params</span>)
     <span class="kw">where</span>
-        <span class="ident">N</span>: <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span>,
+        <span class="ident">N</span>: <span class="ident">lsp::notification::Notification</span>,
     {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Initialized</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span><span class="ident">::server::StateKind::Initialized</span> <span class="op">|</span> <span class="kw">crate</span><span class="ident">::server::StateKind::ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
             <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>);
-            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">params</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
         }
     }
 
@@ -1227,46 +1227,46 @@
     <span class="doccomment">/// This request will only be sent if the server is initialized.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>,
+        <span class="ident">params</span>: <span class="ident">R::Params</span>,
         <span class="ident">token</span>: <span class="ident">CancellationToken</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">R::Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
+        <span class="ident">R</span>: <span class="ident">lsp::request::Request</span>,
     {
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>, <span class="ident">token</span>: <span class="ident">CancellationToken</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">R::Params</span>, <span class="ident">token</span>: <span class="ident">CancellationToken</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">R::Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
+        <span class="ident">R</span>: <span class="ident">lsp::request::Request</span>,
     {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>));
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::Relaxed</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Outgoing::Request</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequest::request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>));
 
-        <span class="kw">let</span> <span class="ident">response_waiter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">wait</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Id</span>::<span class="ident">Number</span>(<span class="ident">id</span>));
+        <span class="kw">let</span> <span class="ident">response_waiter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">wait</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::Id::Number</span>(<span class="ident">id</span>));
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>().<span class="ident">send</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
-            <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to send request&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">internal_error</span>());
+            <span class="macro">log::error!</span>(<span class="string">&quot;failed to send request&quot;</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::Error::internal_error</span>());
         }
 
-        <span class="macro">select</span><span class="macro">!</span> {
+        <span class="macro">select!</span> {
             <span class="kw">_</span> <span class="op">=</span> <span class="ident">token</span>.<span class="ident">wait</span>() <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="number">0</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Id</span>::<span class="ident">Number</span>(<span class="ident">id</span>)).<span class="ident">is_none</span>() {
-                    <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;received response with unknown request ID: {}&quot;</span>, <span class="ident">id</span>);
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="number">0</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::jsonrpc::Id::Number</span>(<span class="ident">id</span>)).<span class="ident">is_none</span>() {
+                    <span class="macro">log::warn!</span>(<span class="string">&quot;received response with unknown request ID: {}&quot;</span>, <span class="ident">id</span>);
                 }
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> {
-                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">i32</span>::<span class="ident">try_from</span>(<span class="ident">id</span>).<span class="ident">expect</span>(<span class="string">&quot;error converting u64 to i32&quot;</span>);
-                    <span class="ident">lsp</span>::<span class="ident">CancelParams</span> { <span class="ident">id</span>: <span class="ident">lsp</span>::<span class="ident">NumberOrString</span>::<span class="ident">Number</span>(<span class="ident">id</span>) }
+                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">i32::try_from</span>(<span class="ident">id</span>).<span class="ident">expect</span>(<span class="string">&quot;error converting u64 to i32&quot;</span>);
+                    <span class="ident">lsp::CancelParams</span> { <span class="ident">id</span>: <span class="ident">lsp::NumberOrString::Number</span>(<span class="ident">id</span>) }
                 };
-                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Cancel</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
-                <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">request_cancelled</span>())
+                <span class="self">self</span>.<span class="ident">send_notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::Cancel</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
+                <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::Error::request_cancelled</span>())
             },
             <span class="ident">response</span> <span class="op">=</span> <span class="ident">response_waiter</span>.<span class="ident">fuse</span>() <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">result</span>) <span class="op">=</span> <span class="ident">response</span>.<span class="ident">into_parts</span>();
                 <span class="ident">result</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> {
-                    <span class="ident">serde_json</span>::<span class="ident">from_value</span>(<span class="ident">v</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span> {
-                        <span class="ident">code</span>: <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ErrorCode</span>::<span class="ident">ParseError</span>,
+                    <span class="ident">serde_json::from_value</span>(<span class="ident">v</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Error</span> {
+                        <span class="ident">code</span>: <span class="kw">crate</span><span class="ident">::jsonrpc::ErrorCode::ParseError</span>,
                         <span class="ident">message</span>: <span class="ident">e</span>.<span class="ident">to_string</span>(),
                         <span class="ident">data</span>: <span class="prelude-val">None</span>,
                     })
@@ -1277,26 +1277,26 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_request_initialized</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">params</span>: <span class="ident">R</span>::<span class="ident">Params</span>,
+        <span class="ident">params</span>: <span class="ident">R::Params</span>,
         <span class="ident">token</span>: <span class="ident">CancellationToken</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>::<span class="prelude-ty">Result</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">R::Result</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span>,
+        <span class="ident">R</span>: <span class="ident">lsp::request::Request</span>,
     {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Initialized</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span><span class="ident">::server::StateKind::Initialized</span> <span class="op">|</span> <span class="kw">crate</span><span class="ident">::server::StateKind::ShutDown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>() {
             <span class="self">self</span>.<span class="ident">send_request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) <span class="op">+</span> <span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequest</span>::<span class="ident">request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>);
-            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
-            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">not_initialized_error</span>())
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>) <span class="op">+</span> <span class="number">1</span>;
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequest::request</span>::<span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">id</span>, <span class="ident">params</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;server not initialized, supressing message: {}&quot;</span>, <span class="ident">msg</span>);
+            <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::not_initialized_error</span>())
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Client</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify</span><span class="macro">!</span>(<span class="ident">Client</span>))
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="macro">stringify!</span>(<span class="ident">Client</span>))
             .<span class="ident">field</span>(<span class="string">&quot;request_id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request_id</span>)
             .<span class="ident">field</span>(<span class="string">&quot;pending_requests&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>)
             .<span class="ident">field</span>(<span class="string">&quot;state&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">state</span>)
@@ -1313,155 +1313,155 @@
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">is_cancelled</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller::default</span>();
             <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">canceller</span>.<span class="ident">token</span>();
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">token</span>.<span class="ident">is_cancelled</span>());
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">token</span>.<span class="ident">is_cancelled</span>());
             <span class="ident">canceller</span>.<span class="ident">cancel</span>();
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">token</span>.<span class="ident">is_cancelled</span>());
+            <span class="macro">assert!</span>(<span class="ident">token</span>.<span class="ident">is_cancelled</span>());
         }
     }
 
     <span class="kw">mod</span> <span class="ident">client</span> {
         <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-        <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::{<span class="ident">ClientRequest</span>, <span class="ident">Id</span>, <span class="ident">Outgoing</span>, <span class="ident">Response</span>};
-        <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">StreamExt</span>;
-        <span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">json</span>;
+        <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::jsonrpc</span>::{<span class="ident">ClientRequest</span>, <span class="ident">Id</span>, <span class="ident">Outgoing</span>, <span class="ident">Response</span>};
+        <span class="kw">use</span> <span class="ident">futures::StreamExt</span>;
+        <span class="kw">use</span> <span class="ident">serde_json::json</span>;
 
         <span class="kw">mod</span> <span class="ident">helper</span> {
             <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-            <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Outgoing</span>;
-            <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">channel</span>::<span class="ident">mpsc</span>;
+            <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Outgoing</span>;
+            <span class="kw">use</span> <span class="ident">futures::channel::mpsc</span>;
 
-            <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">client</span>(<span class="ident">initialize</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Client</span>, <span class="ident">mpsc</span>::<span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">Outgoing</span><span class="op">&gt;</span>) {
-                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">State</span>::<span class="ident">new</span>());
-                <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">channel</span>(<span class="number">4</span>);
-                <span class="kw">let</span> <span class="ident">pending_client</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ClientRequests</span>::<span class="ident">new</span>());
-                <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">Client</span>::<span class="ident">new</span>(<span class="ident">tx</span>, <span class="ident">pending_client</span>, <span class="ident">state</span>);
+            <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">client</span>(<span class="ident">initialize</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Client</span>, <span class="ident">mpsc::Receiver</span><span class="op">&lt;</span><span class="ident">Outgoing</span><span class="op">&gt;</span>) {
+                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="kw">crate</span><span class="ident">::server::State::new</span>());
+                <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>(<span class="number">4</span>);
+                <span class="kw">let</span> <span class="ident">pending_client</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::ClientRequests::new</span>());
+                <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::client::Client::new</span>(<span class="ident">tx</span>, <span class="ident">pending_client</span>, <span class="ident">state</span>);
                 <span class="kw">if</span> <span class="ident">initialize</span> {
-                    <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">set</span>(<span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Initialized</span>);
+                    <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">set</span>(<span class="kw">crate</span><span class="ident">::server::StateKind::Initialized</span>);
                 }
                 (<span class="ident">client</span>, <span class="ident">rx</span>)
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_edit</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">false</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_edit</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">false</span>);
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">edit</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">WorkspaceEdit</span>::<span class="ident">default</span>();
-                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+                <span class="kw">let</span> <span class="ident">edit</span> <span class="op">=</span> <span class="ident">lsp::WorkspaceEdit::default</span>();
+                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">Default::default</span>();
                 <span class="ident">client</span>.<span class="ident">apply_edit</span>(<span class="ident">edit</span>, <span class="ident">label</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">lsp</span>::<span class="ident">ApplyWorkspaceEditResponse</span> {
-                    <span class="ident">applied</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-                    <span class="ident">failure_reason</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-                    <span class="ident">failed_change</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(<span class="ident">lsp::ApplyWorkspaceEditResponse</span> {
+                    <span class="ident">applied</span>: <span class="ident">Default::default</span>(),
+                    <span class="ident">failure_reason</span>: <span class="ident">Default::default</span>(),
+                    <span class="ident">failed_change</span>: <span class="ident">Default::default</span>(),
                 })
                 .<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">not_initialized_error</span>()));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::not_initialized_error</span>()));
 
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configuration</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">false</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">configuration</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">false</span>);
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">items</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+                <span class="kw">let</span> <span class="ident">items</span> <span class="op">=</span> <span class="ident">Default::default</span>();
                 <span class="ident">client</span>.<span class="ident">configuration</span>(<span class="ident">items</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">serde_json</span>::<span class="ident">Value</span><span class="op">&gt;</span>::<span class="ident">new</span>()).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(<span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span><span class="ident">::new</span>()).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">not_initialized_error</span>()));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::not_initialized_error</span>()));
 
             <span class="prelude-val">Ok</span>(())
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">display</span>() {
-            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>).<span class="number">0</span>;
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">client</span>);
+            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>).<span class="number">0</span>;
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">client</span>);
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">new</span>() {
-            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">false</span>).<span class="number">0</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>(), <span class="kw">crate</span>::<span class="ident">server</span>::<span class="ident">StateKind</span>::<span class="ident">Uninitialized</span>);
+            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">false</span>).<span class="number">0</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">get</span>(), <span class="kw">crate</span><span class="ident">::server::StateKind::Uninitialized</span>);
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span>() {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">MessageType</span>::<span class="ident">Info</span>;
-            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
             <span class="ident">client</span>.<span class="ident">log_message</span>(<span class="ident">typ</span>, <span class="ident">message</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">LogMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">LogMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>));
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
+                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::LogMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing::Request</span>(<span class="ident">ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::LogMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>));
+                <span class="macro">assert_eq!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">publish_diagnostics</span>() {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
-            <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">Url</span>::<span class="ident">parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">diags</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Diagnostic</span><span class="op">&gt;</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">diags</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">lsp::Diagnostic</span><span class="op">&gt;</span><span class="ident">::new</span>();
+            <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::default</span>();
             <span class="ident">client</span>.<span class="ident">publish_diagnostics</span>(<span class="ident">uri</span>.<span class="ident">clone</span>(), <span class="ident">diags</span>.<span class="ident">clone</span>(), <span class="ident">version</span>).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">PublishDiagnosticsParams</span> {
+                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::PublishDiagnosticsParams</span> {
                     <span class="ident">uri</span>,
                     <span class="ident">diagnostics</span>: <span class="ident">diags</span>,
                     <span class="ident">version</span>,
                 };
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">PublishDiagnostics</span><span class="op">&gt;</span>(
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing::Request</span>(<span class="ident">ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::PublishDiagnostics</span><span class="op">&gt;</span>(
                     <span class="ident">params</span>,
                 ));
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register_capability</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">registrations</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+                <span class="kw">let</span> <span class="ident">registrations</span> <span class="op">=</span> <span class="ident">Default::default</span>();
                 <span class="ident">client</span>.<span class="ident">register_capability</span>(<span class="ident">registrations</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(()).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(()).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
 
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_notification_initialized_when_uninitialized</span>() {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">false</span>);
-            <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">Url</span>::<span class="ident">parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">diags</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">Diagnostic</span><span class="op">&gt;</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">false</span>);
+            <span class="kw">let</span> <span class="ident">uri</span> <span class="op">=</span> <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">diags</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">lsp::Diagnostic</span><span class="op">&gt;</span><span class="ident">::new</span>();
+            <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span><span class="ident">::default</span>();
             <span class="ident">client</span>.<span class="ident">publish_diagnostics</span>(<span class="ident">uri</span>.<span class="ident">clone</span>(), <span class="ident">diags</span>.<span class="ident">clone</span>(), <span class="ident">version</span>).<span class="kw">await</span>;
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_notification</span>() {
             <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -1470,25 +1470,25 @@
 
             <span class="kw">enum</span> <span class="ident">CustomNotification</span> {}
 
-            <span class="kw">impl</span> <span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">Notification</span> <span class="kw">for</span> <span class="ident">CustomNotification</span> {
+            <span class="kw">impl</span> <span class="ident">lsp::notification::Notification</span> <span class="kw">for</span> <span class="ident">CustomNotification</span> {
                 <span class="kw">type</span> <span class="ident">Params</span> <span class="op">=</span> <span class="ident">CustomNotificationParams</span>;
 
                 <span class="kw">const</span> <span class="ident">METHOD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;custom/notification&quot;</span>;
             }
 
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomNotificationParams</span>;
             <span class="ident">client</span>.<span class="ident">send_custom_notification</span>::<span class="op">&lt;</span><span class="ident">CustomNotification</span><span class="op">&gt;</span>(<span class="ident">params</span>).<span class="kw">await</span>;
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomNotificationParams</span>;
-                <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">CustomNotification</span><span class="op">&gt;</span>(<span class="ident">params</span>);
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="ident">request</span>);
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
+                <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">CustomNotification</span><span class="op">&gt;</span>(<span class="ident">params</span>);
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing::Request</span>(<span class="ident">request</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_request</span>() {
             <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -1497,37 +1497,37 @@
 
             <span class="kw">enum</span> <span class="ident">CustomRequest</span> {}
 
-            <span class="kw">impl</span> <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
+            <span class="kw">impl</span> <span class="ident">lsp::request::Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
                 <span class="kw">type</span> <span class="ident">Params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> ();
 
                 <span class="kw">const</span> <span class="ident">METHOD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;custom/request&quot;</span>;
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">new</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller::new</span>();
             <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">canceller</span>.<span class="ident">token</span>();
 
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="ident">client</span>.<span class="ident">send_custom_request</span>::<span class="op">&lt;</span><span class="ident">CustomRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(()).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(()).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
 
             <span class="kw">let</span> <span class="ident">cancel</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="ident">tokio</span>::<span class="ident">time</span>::<span class="ident">sleep</span>(<span class="ident">tokio</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
+                <span class="ident">tokio::time::sleep</span>(<span class="ident">tokio::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
                 <span class="ident">canceller</span>.<span class="ident">cancel</span>();
             };
 
-            <span class="kw">let</span> (<span class="ident">result</span>, (), ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join3</span>(<span class="ident">req</span>, <span class="ident">rsp</span>, <span class="ident">cancel</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
+            <span class="kw">let</span> (<span class="ident">result</span>, (), ()) <span class="op">=</span> <span class="ident">futures::future::join3</span>(<span class="ident">req</span>, <span class="ident">rsp</span>, <span class="ident">cancel</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_request_with_invalid_response</span>() {
             <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -1536,36 +1536,36 @@
 
             <span class="kw">enum</span> <span class="ident">CustomRequest</span> {}
 
-            <span class="kw">impl</span> <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
+            <span class="kw">impl</span> <span class="ident">lsp::request::Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
                 <span class="kw">type</span> <span class="ident">Params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> ();
 
                 <span class="kw">const</span> <span class="ident">METHOD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;custom/request&quot;</span>;
             }
 
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken</span>::<span class="ident">default</span>();
+                <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="ident">client</span>.<span class="ident">send_custom_request</span>::<span class="op">&lt;</span><span class="ident">CustomRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="ident">u64</span>::<span class="ident">MAX</span>).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(<span class="ident">u64::MAX</span>).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
 
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="macro">matches</span><span class="macro">!</span>(
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert!</span>(<span class="macro">matches!</span>(
                 <span class="ident">result</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span> {
-                    <span class="ident">code</span>: <span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">ErrorCode</span>::<span class="ident">ParseError</span>,
+                <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::Error</span> {
+                    <span class="ident">code</span>: <span class="kw">crate</span><span class="ident">::jsonrpc::ErrorCode::ParseError</span>,
                     ..
                 })
             ));
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_custom_request_and_cancel</span>() {
             <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
@@ -1574,109 +1574,109 @@
 
             <span class="kw">enum</span> <span class="ident">CustomRequest</span> {}
 
-            <span class="kw">impl</span> <span class="ident">lsp</span>::<span class="ident">request</span>::<span class="ident">Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
+            <span class="kw">impl</span> <span class="ident">lsp::request::Request</span> <span class="kw">for</span> <span class="ident">CustomRequest</span> {
                 <span class="kw">type</span> <span class="ident">Params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">u64</span>;
 
                 <span class="kw">const</span> <span class="ident">METHOD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;custom/request&quot;</span>;
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">new</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller::new</span>();
             <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">canceller</span>.<span class="ident">token</span>();
 
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">CustomRequestParams</span>;
                 <span class="ident">client</span>.<span class="ident">send_custom_request</span>::<span class="op">&lt;</span><span class="ident">CustomRequest</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(()).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(()).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
 
             <span class="ident">canceller</span>.<span class="ident">cancel</span>();
 
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">jsonrpc</span>::<span class="ident">Error</span>::<span class="ident">request_cancelled</span>()));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::jsonrpc::Error::request_cancelled</span>()));
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span>() {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">MessageType</span>::<span class="ident">Info</span>;
-            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
             <span class="ident">client</span>.<span class="ident">show_message</span>(<span class="ident">typ</span>, <span class="ident">message</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">ShowMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">ShowMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>));
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
+                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ShowMessageParams</span> { <span class="ident">typ</span>, <span class="ident">message</span> };
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Outgoing::Request</span>(<span class="ident">ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::ShowMessage</span><span class="op">&gt;</span>(<span class="ident">params</span>));
+                <span class="macro">assert_eq!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
 
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp</span>::<span class="ident">MessageType</span>::<span class="ident">Info</span>;
-            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">default</span>();
-            <span class="kw">let</span> <span class="ident">actions</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
+            <span class="kw">let</span> <span class="ident">actions</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">show_message_request</span>(<span class="ident">typ</span>, <span class="ident">message</span>.<span class="ident">clone</span>(), <span class="ident">actions</span>);
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">MessageActionItem</span><span class="op">&gt;</span>).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(<span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">lsp::MessageActionItem</span><span class="op">&gt;</span>).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
 
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">telemetry_event</span>() {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
             <span class="ident">client</span>.<span class="ident">telemetry_event</span>(<span class="number">42u8</span>).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="macro">json</span><span class="macro">!</span>([<span class="number">42u8</span>]);
+                <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="macro">json!</span>([<span class="number">42u8</span>]);
                 <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span>
-                    <span class="ident">Outgoing</span>::<span class="ident">Request</span>(<span class="ident">ClientRequest</span>::<span class="ident">notification</span>::<span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">notification</span>::<span class="ident">TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">params</span>));
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
+                    <span class="ident">Outgoing::Request</span>(<span class="ident">ClientRequest::notification</span>::<span class="op">&lt;</span><span class="ident">lsp::notification::TelemetryEvent</span><span class="op">&gt;</span>(<span class="ident">params</span>));
+                <span class="macro">assert_eq!</span>(<span class="ident">item</span>, <span class="ident">message</span>);
             }
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unregister_capability</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unregister_capability</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">unregistrations</span> <span class="op">=</span> <span class="ident">Default</span>::<span class="ident">default</span>();
+                <span class="kw">let</span> <span class="ident">unregistrations</span> <span class="op">=</span> <span class="ident">Default::default</span>();
                 <span class="ident">client</span>.<span class="ident">unregister_capability</span>(<span class="ident">unregistrations</span>)
             };
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(()).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(()).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(()));
 
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper</span>::<span class="ident">client</span>(<span class="bool-val">true</span>);
+        <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">workspace_folders</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
 
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">workspace_folders</span>();
             <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">async</span> {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id</span>::<span class="ident">Number</span>(<span class="number">0</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_value</span>(<span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp</span>::<span class="ident">WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span>).<span class="ident">unwrap</span>();
-                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response</span>::<span class="ident">ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Id::Number</span>(<span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">serde_json::to_value</span>(<span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">lsp::WorkspaceFolder</span><span class="op">&gt;</span><span class="op">&gt;</span>).<span class="ident">unwrap</span>();
+                <span class="ident">client</span>.<span class="ident">inner</span>.<span class="ident">pending_requests</span>.<span class="ident">insert</span>(<span class="ident">Response::ok</span>(<span class="ident">id</span>, <span class="ident">result</span>));
             };
-            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>));
+            <span class="kw">let</span> (<span class="ident">result</span>, ()) <span class="op">=</span> <span class="ident">futures::future::join</span>(<span class="ident">req</span>, <span class="ident">rsp</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>));
 
             <span class="prelude-val">Ok</span>(())
         }
@@ -1687,17 +1687,17 @@
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">debug</span>() {
-            <span class="kw">let</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">new</span>();
-            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">canceller</span>);
+            <span class="kw">let</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller::new</span>();
+            <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">canceller</span>);
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">default</span>() {
-            <span class="kw">let</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller</span>::<span class="ident">default</span>();
-            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">canceller</span>);
+            <span class="kw">let</span> <span class="ident">canceller</span> <span class="op">=</span> <span class="ident">TokenCanceller::default</span>();
+            <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">canceller</span>);
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lspower" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lspower" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
