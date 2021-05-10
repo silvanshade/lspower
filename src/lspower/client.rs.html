@@ -1166,7 +1166,7 @@
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::jsonrpc::Result</span><span class="op">&lt;</span><span class="ident">lsp::ApplyWorkspaceEditResponse</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">CancellationToken::default</span>();
-        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ApplyWorkspaceEditParams</span> { <span class="ident">edit</span>, <span class="ident">label</span> };
+        <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::ApplyWorkspaceEditParams</span> { <span class="ident">label</span>, <span class="ident">edit</span> };
         <span class="self">self</span>.<span class="ident">send_request_initialized</span>::<span class="op">&lt;</span><span class="ident">lsp::request::ApplyWorkspaceEdit</span><span class="op">&gt;</span>(<span class="ident">params</span>, <span class="ident">token</span>).<span class="kw">await</span>
     }
 
