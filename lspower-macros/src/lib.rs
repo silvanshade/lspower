@@ -123,9 +123,10 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
     let id_match_arms: proc_macro2::TokenStream = methods
         .iter()
         .zip(variant_names.iter())
-        .filter_map(|(method, var_name)| match method.result {
-            Some(_) => Some(quote!(ServerMethod::#var_name { ref id, .. } => Some(id),)),
-            None => None,
+        .filter_map(|(method, var_name)| {
+            method
+                .result
+                .map(|_| quote!(ServerMethod::#var_name { ref id, .. } => Some(id),))
         })
         .collect();
 

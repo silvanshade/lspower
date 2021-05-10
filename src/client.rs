@@ -314,7 +314,7 @@ impl Client {
         label: Option<String>,
     ) -> crate::jsonrpc::Result<lsp::ApplyWorkspaceEditResponse> {
         let token = CancellationToken::default();
-        let params = lsp::ApplyWorkspaceEditParams { edit, label };
+        let params = lsp::ApplyWorkspaceEditParams { label, edit };
         self.send_request_initialized::<lsp::request::ApplyWorkspaceEdit>(params, token).await
     }
 
