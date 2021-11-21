@@ -1,7 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/jsonrpc/error.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>error.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../lspower/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;jsonrpc&#x2F;error.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>error.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../lspower/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -285,8 +282,7 @@
 <span id="282">282</span>
 <span id="283">283</span>
 <span id="284">284</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Error types defined by the JSON-RPC specification.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Error types defined by the JSON-RPC specification.</span>
 
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::Deserializer</span>, <span class="ident">ser::Serializer</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">serde_json::Value</span>;
@@ -323,57 +319,57 @@
 
 <span class="kw">impl</span> <span class="ident">ErrorCode</span> {
     <span class="doccomment">/// Returns the integer error code value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">i64</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">ErrorCode::ParseError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32700</span>,
-            <span class="ident">ErrorCode::InvalidRequest</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32600</span>,
-            <span class="ident">ErrorCode::MethodNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32601</span>,
-            <span class="ident">ErrorCode::InvalidParams</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32602</span>,
-            <span class="ident">ErrorCode::InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32603</span>,
-            <span class="ident">ErrorCode::RequestCancelled</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32800</span>,
-            <span class="ident">ErrorCode::ContentModified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">-</span><span class="number">32801</span>,
-            <span class="ident">ErrorCode::ServerError</span>(<span class="ident">code</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">code</span>,
+            <span class="ident">ErrorCode::ParseError</span> =&gt; <span class="op">-</span><span class="number">32700</span>,
+            <span class="ident">ErrorCode::InvalidRequest</span> =&gt; <span class="op">-</span><span class="number">32600</span>,
+            <span class="ident">ErrorCode::MethodNotFound</span> =&gt; <span class="op">-</span><span class="number">32601</span>,
+            <span class="ident">ErrorCode::InvalidParams</span> =&gt; <span class="op">-</span><span class="number">32602</span>,
+            <span class="ident">ErrorCode::InternalError</span> =&gt; <span class="op">-</span><span class="number">32603</span>,
+            <span class="ident">ErrorCode::RequestCancelled</span> =&gt; <span class="op">-</span><span class="number">32800</span>,
+            <span class="ident">ErrorCode::ContentModified</span> =&gt; <span class="op">-</span><span class="number">32801</span>,
+            <span class="ident">ErrorCode::ServerError</span>(<span class="ident">code</span>) =&gt; <span class="ident">code</span>,
         }
     }
 
     <span class="doccomment">/// Returns a human-readable description of the error.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">ErrorCode::ParseError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Parse error&quot;</span>,
-            <span class="ident">ErrorCode::InvalidRequest</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Invalid request&quot;</span>,
-            <span class="ident">ErrorCode::MethodNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Method not found&quot;</span>,
-            <span class="ident">ErrorCode::InvalidParams</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Invalid params&quot;</span>,
-            <span class="ident">ErrorCode::InternalError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Internal error&quot;</span>,
-            <span class="ident">ErrorCode::RequestCancelled</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Canceled&quot;</span>,
-            <span class="ident">ErrorCode::ContentModified</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Content modified&quot;</span>,
-            <span class="ident">ErrorCode::ServerError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Server error&quot;</span>,
+            <span class="ident">ErrorCode::ParseError</span> =&gt; <span class="string">&quot;Parse error&quot;</span>,
+            <span class="ident">ErrorCode::InvalidRequest</span> =&gt; <span class="string">&quot;Invalid request&quot;</span>,
+            <span class="ident">ErrorCode::MethodNotFound</span> =&gt; <span class="string">&quot;Method not found&quot;</span>,
+            <span class="ident">ErrorCode::InvalidParams</span> =&gt; <span class="string">&quot;Invalid params&quot;</span>,
+            <span class="ident">ErrorCode::InternalError</span> =&gt; <span class="string">&quot;Internal error&quot;</span>,
+            <span class="ident">ErrorCode::RequestCancelled</span> =&gt; <span class="string">&quot;Canceled&quot;</span>,
+            <span class="ident">ErrorCode::ContentModified</span> =&gt; <span class="string">&quot;Content modified&quot;</span>,
+            <span class="ident">ErrorCode::ServerError</span>(<span class="kw">_</span>) =&gt; <span class="string">&quot;Server error&quot;</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">i64</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">code</span> {
-            <span class="op">-</span><span class="number">32700</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::ParseError</span>,
-            <span class="op">-</span><span class="number">32600</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::InvalidRequest</span>,
-            <span class="op">-</span><span class="number">32601</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::MethodNotFound</span>,
-            <span class="op">-</span><span class="number">32602</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::InvalidParams</span>,
-            <span class="op">-</span><span class="number">32603</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::InternalError</span>,
-            <span class="op">-</span><span class="number">32800</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::RequestCancelled</span>,
-            <span class="op">-</span><span class="number">32801</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::ContentModified</span>,
-            <span class="ident">code</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorCode::ServerError</span>(<span class="ident">code</span>),
+            <span class="op">-</span><span class="number">32700</span> =&gt; <span class="ident">ErrorCode::ParseError</span>,
+            <span class="op">-</span><span class="number">32600</span> =&gt; <span class="ident">ErrorCode::InvalidRequest</span>,
+            <span class="op">-</span><span class="number">32601</span> =&gt; <span class="ident">ErrorCode::MethodNotFound</span>,
+            <span class="op">-</span><span class="number">32602</span> =&gt; <span class="ident">ErrorCode::InvalidParams</span>,
+            <span class="op">-</span><span class="number">32603</span> =&gt; <span class="ident">ErrorCode::InternalError</span>,
+            <span class="op">-</span><span class="number">32800</span> =&gt; <span class="ident">ErrorCode::RequestCancelled</span>,
+            <span class="op">-</span><span class="number">32801</span> =&gt; <span class="ident">ErrorCode::ContentModified</span>,
+            <span class="ident">code</span> =&gt; <span class="ident">ErrorCode::ServerError</span>(<span class="ident">code</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="ident">Display::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">code</span>(), <span class="ident">f</span>)
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     {
@@ -383,7 +379,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">S</span>: <span class="ident">Serializer</span>,
     {
@@ -406,7 +402,7 @@
 
 <span class="kw">impl</span> <span class="ident">Error</span> {
     <span class="doccomment">/// Creates a new error from the given `ErrorCode`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">code</span>: <span class="ident">ErrorCode</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">code</span>: <span class="ident">ErrorCode</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Error</span> {
             <span class="ident">code</span>,
             <span class="ident">message</span>: <span class="ident">code</span>.<span class="ident">description</span>().<span class="ident">to_string</span>(),
@@ -415,22 +411,22 @@
     }
 
     <span class="doccomment">/// Creates a new parse error (`-32700`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_error</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::ParseError</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;invalid request&quot; error (`-32600`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_request</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_request</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::InvalidRequest</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;method not found&quot; error (`-32601`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">method_not_found</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">method_not_found</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::MethodNotFound</span>)
     }
 
     <span class="doccomment">/// Creates a new &quot;invalid params&quot; error (`-32602`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_params</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="ident">M</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalid_params</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">message</span>: <span class="ident">M</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">M</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     {
@@ -442,7 +438,7 @@
     }
 
     <span class="doccomment">/// Creates a new internal error (`-32603`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal_error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal_error</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::InternalError</span>)
     }
 
@@ -451,7 +447,7 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This error code is defined by the Language Server Protocol.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_cancelled</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_cancelled</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::RequestCancelled</span>)
     }
 
@@ -460,13 +456,13 @@
     <span class="doccomment">/// # Compatibility</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This error code is defined by the Language Server Protocol.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">content_modified</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">content_modified</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Error::new</span>(<span class="ident">ErrorCode::ContentModified</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}: {}&quot;</span>, <span class="self">self</span>.<span class="ident">code</span>.<span class="ident">description</span>(), <span class="self">self</span>.<span class="ident">message</span>)
     }
 }
@@ -476,7 +472,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::jsonrpc::error</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::jsonrpc::error</span>::<span class="kw-2">*</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">display_error</span>() {
@@ -565,11 +561,12 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">server_not_initialized</span>() {
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">ErrorCode::ServerError</span>(<span class="op">-</span><span class="number">32002</span>);
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::jsonrpc::not_initialized_error</span>();
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::jsonrpc::not_initialized_error</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">code</span>, <span class="ident">error</span>.<span class="ident">code</span>);
         <span class="macro">assert_eq!</span>(<span class="string">&quot;Server not initialized&quot;</span>, <span class="ident">error</span>.<span class="ident">message</span>);
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="lspower" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</body></html>
