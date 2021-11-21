@@ -265,9 +265,9 @@ mod tests {
         #[tokio::test]
         async fn is_terminated() {
             let (_, mut messages) = LspService::new(|_| Mock::default());
-            assert_eq!(messages.is_terminated(), false);
+            assert!(messages.is_terminated());
             while messages.next().await.is_some() {}
-            assert_eq!(messages.is_terminated(), true);
+            assert!(messages.is_terminated());
         }
 
         #[tokio::test]
