@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "lspower"
 version = "1.2.0"
 authors = ["silvanshade <silvanshade@users.noreply.github.com>", "Eyal Kalderon <ebkalderon@gmail.com>", "lspower developers"]
