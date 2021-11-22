@@ -551,7 +551,7 @@ mod tests {
         #[tokio::test]
         async fn log_message() {
             let (client, mut rx) = helper::client(true);
-            let typ = lsp::MessageType::Info;
+            let typ = lsp::MessageType::INFO;
             let message = String::default();
             client.log_message(typ, message.clone()).await;
             if let Some(item) = rx.next().await {
@@ -752,7 +752,7 @@ mod tests {
         #[tokio::test]
         async fn show_message() {
             let (client, mut rx) = helper::client(true);
-            let typ = lsp::MessageType::Info;
+            let typ = lsp::MessageType::INFO;
             let message = String::default();
             client.show_message(typ, message.clone()).await;
             if let Some(item) = rx.next().await {
@@ -766,7 +766,7 @@ mod tests {
         async fn show_message_request() -> anyhow::Result<()> {
             let (client, _rx) = helper::client(true);
 
-            let typ = lsp::MessageType::Info;
+            let typ = lsp::MessageType::INFO;
             let message = String::default();
             let actions = Default::default();
 

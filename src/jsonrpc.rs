@@ -288,7 +288,7 @@ mod tests {
         fn display_client_request() {
             let id = 1;
             let params = {
-                let typ = lsp::MessageType::Info;
+                let typ = lsp::MessageType::INFO;
                 let message = Default::default();
                 let actions = Default::default();
                 lsp::ShowMessageRequestParams { typ, message, actions }

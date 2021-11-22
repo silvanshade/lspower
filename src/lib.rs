@@ -873,7 +873,7 @@ mod tests {
             let params = lsp::CallHierarchyIncomingCallsParams {
                 item: lsp::CallHierarchyItem {
                     name: Default::default(),
-                    kind: lsp::SymbolKind::Unknown,
+                    kind: lsp::SymbolKind::NULL,
                     tags: Default::default(),
                     detail: Default::default(),
                     uri: lsp::Url::parse("inmemory::///test").unwrap(),
@@ -903,7 +903,7 @@ mod tests {
             let params = lsp::CallHierarchyOutgoingCallsParams {
                 item: lsp::CallHierarchyItem {
                     name: Default::default(),
-                    kind: lsp::SymbolKind::Unknown,
+                    kind: lsp::SymbolKind::NULL,
                     tags: Default::default(),
                     detail: Default::default(),
                     uri: lsp::Url::parse("inmemory::///test").unwrap(),
@@ -1801,7 +1801,7 @@ mod tests {
                 text_document: lsp::TextDocumentIdentifier {
                     uri: lsp::Url::parse("inmemory::///test").unwrap(),
                 },
-                reason: lsp::TextDocumentSaveReason::Manual,
+                reason: lsp::TextDocumentSaveReason::MANUAL,
             };
             let request: Incoming = helper::request("textDocument/willSave", params).unwrap();
             assert_eq!(service.poll_ready(), Poll::Ready(Ok(())));
@@ -1819,7 +1819,7 @@ mod tests {
                 text_document: lsp::TextDocumentIdentifier {
                     uri: lsp::Url::parse("inmemory::///test").unwrap(),
                 },
-                reason: lsp::TextDocumentSaveReason::Manual,
+                reason: lsp::TextDocumentSaveReason::MANUAL,
             };
             let request: Incoming = helper::request("textDocument/willSaveWaitUntil", params).unwrap();
             let response = Response::error(Some(Id::Number(1)), Error::method_not_found());

@@ -62,7 +62,7 @@ impl LanguageServer for Backend {
                 .send_custom_notification::<CustomNotification>(CustomNotificationParams::new("Hello", "Message"))
                 .await;
             self.client
-                .log_message(MessageType::Info, format!("Command executed with params: {:?}", params))
+                .log_message(MessageType::INFO, format!("Command executed with params: {:?}", params))
                 .await;
             Ok(None)
         } else {
