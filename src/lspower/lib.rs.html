@@ -2789,7 +2789,7 @@
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::CallHierarchyIncomingCallsParams</span> {
                 <span class="ident">item</span>: <span class="ident">lsp::CallHierarchyItem</span> {
                     <span class="ident">name</span>: <span class="ident">Default::default</span>(),
-                    <span class="ident">kind</span>: <span class="ident">lsp::SymbolKind::Unknown</span>,
+                    <span class="ident">kind</span>: <span class="ident">lsp::SymbolKind::NULL</span>,
                     <span class="ident">tags</span>: <span class="ident">Default::default</span>(),
                     <span class="ident">detail</span>: <span class="ident">Default::default</span>(),
                     <span class="ident">uri</span>: <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>(),
@@ -2819,7 +2819,7 @@
             <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">lsp::CallHierarchyOutgoingCallsParams</span> {
                 <span class="ident">item</span>: <span class="ident">lsp::CallHierarchyItem</span> {
                     <span class="ident">name</span>: <span class="ident">Default::default</span>(),
-                    <span class="ident">kind</span>: <span class="ident">lsp::SymbolKind::Unknown</span>,
+                    <span class="ident">kind</span>: <span class="ident">lsp::SymbolKind::NULL</span>,
                     <span class="ident">tags</span>: <span class="ident">Default::default</span>(),
                     <span class="ident">detail</span>: <span class="ident">Default::default</span>(),
                     <span class="ident">uri</span>: <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>(),
@@ -3717,7 +3717,7 @@
                 <span class="ident">text_document</span>: <span class="ident">lsp::TextDocumentIdentifier</span> {
                     <span class="ident">uri</span>: <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>(),
                 },
-                <span class="ident">reason</span>: <span class="ident">lsp::TextDocumentSaveReason::Manual</span>,
+                <span class="ident">reason</span>: <span class="ident">lsp::TextDocumentSaveReason::MANUAL</span>,
             };
             <span class="kw">let</span> <span class="ident">request</span>: <span class="ident">Incoming</span> <span class="op">=</span> <span class="ident">helper::request</span>(<span class="string">&quot;textDocument/willSave&quot;</span>, <span class="ident">params</span>).<span class="ident">unwrap</span>();
             <span class="macro">assert_eq!</span>(<span class="ident">service</span>.<span class="ident">poll_ready</span>(), <span class="ident">Poll::Ready</span>(<span class="prelude-val">Ok</span>(())));
@@ -3735,7 +3735,7 @@
                 <span class="ident">text_document</span>: <span class="ident">lsp::TextDocumentIdentifier</span> {
                     <span class="ident">uri</span>: <span class="ident">lsp::Url::parse</span>(<span class="string">&quot;inmemory::///test&quot;</span>).<span class="ident">unwrap</span>(),
                 },
-                <span class="ident">reason</span>: <span class="ident">lsp::TextDocumentSaveReason::Manual</span>,
+                <span class="ident">reason</span>: <span class="ident">lsp::TextDocumentSaveReason::MANUAL</span>,
             };
             <span class="kw">let</span> <span class="ident">request</span>: <span class="ident">Incoming</span> <span class="op">=</span> <span class="ident">helper::request</span>(<span class="string">&quot;textDocument/willSaveWaitUntil&quot;</span>, <span class="ident">params</span>).<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">Response::error</span>(<span class="prelude-val">Some</span>(<span class="ident">Id::Number</span>(<span class="number">1</span>)), <span class="ident">Error::method_not_found</span>());

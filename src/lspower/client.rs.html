@@ -1399,7 +1399,7 @@
         <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">log_message</span>() {
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::INFO</span>;
             <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
             <span class="ident">client</span>.<span class="ident">log_message</span>(<span class="ident">typ</span>, <span class="ident">message</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
@@ -1600,7 +1600,7 @@
         <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message</span>() {
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="kw-2">mut</span> <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::INFO</span>;
             <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
             <span class="ident">client</span>.<span class="ident">show_message</span>(<span class="ident">typ</span>, <span class="ident">message</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">next</span>().<span class="kw">await</span> {
@@ -1614,7 +1614,7 @@
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">show_message_request</span>() -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="kw">let</span> (<span class="ident">client</span>, <span class="ident">_rx</span>) <span class="op">=</span> <span class="ident">helper::client</span>(<span class="bool-val">true</span>);
 
-            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::Info</span>;
+            <span class="kw">let</span> <span class="ident">typ</span> <span class="op">=</span> <span class="ident">lsp::MessageType::INFO</span>;
             <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">String::default</span>();
             <span class="kw">let</span> <span class="ident">actions</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
