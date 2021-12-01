@@ -16,6 +16,8 @@ use std::{
 };
 use tower_service::Service;
 
+use crate::Client;
+
 /// Error that occurs when attempting to call the language server after it has already exited.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExitedError;
@@ -70,6 +72,7 @@ pub struct LspService {
     server: Arc<dyn crate::LanguageServer>,
     pending_server: crate::jsonrpc::ServerRequests,
     pending_client: Arc<crate::jsonrpc::ClientRequests>,
+    client: Client,
     state: Arc<crate::server::State>,
 }
 
@@ -89,10 +92,11 @@ impl LspService {
         let client = crate::client::Client::new(tx, pending_client.clone(), state.clone());
 
         let service = LspService {
-            server: Arc::from(init(client)),
+            server: Arc::from(init(client.clone())),
             pending_server: crate::jsonrpc::ServerRequests::new(),
             pending_client,
             state,
+            client,
         };
 
         (service, messages)
@@ -117,14 +121,18 @@ impl Service<crate::jsonrpc::Incoming> for LspService {
             future::err(ExitedError).boxed()
         } else {
             match request {
-                crate::jsonrpc::Incoming::Request(req) => {
-                    super::generated_impl::handle_request(self.server.clone(), &self.state, &self.pending_server, req)
-                },
+                crate::jsonrpc::Incoming::Request(req) => super::generated_impl::handle_request(
+                    self.server.clone(),
+                    &self.state,
+                    &self.pending_server,
+                    req,
+                    self.client.clone(),
+                ),
                 crate::jsonrpc::Incoming::Response(res) => {
                     log::trace!("received client response: {:?}", res);
                     self.pending_client.insert(res);
                     future::ok(None).boxed()
-                },
+                }
             }
         }
     }
