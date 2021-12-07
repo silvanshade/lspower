@@ -100,6 +100,7 @@ enum ResponseKind {
     Err { error: Error, id: Option<Id> },
 }
 
+#[allow(clippy::large_enum_variant)]
 /// An incoming JSON-RPC message.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[cfg_attr(test, derive(Serialize))]

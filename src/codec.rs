@@ -309,14 +309,14 @@ mod tests {
         let kind = std::io::ErrorKind::Other;
         let error = "test error";
         let error = std::io::Error::new(kind, error);
-        ParseError::from(error);
+        let _ = ParseError::from(error);
     }
 
     #[test]
     fn parse_error_from_utf8_error() {
         let bytes = vec![0, 159, 146, 150];
         if let Err(error) = std::str::from_utf8(&bytes) {
-            ParseError::from(error);
+            let _ = ParseError::from(error);
         } else {
             unreachable!()
         }
