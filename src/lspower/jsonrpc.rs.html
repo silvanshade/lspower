@@ -362,6 +362,7 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
+<span id="364">364</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A subset of JSON-RPC types used by the Language Server Protocol.</span>
 
 <span class="kw">mod</span> <span class="ident">error</span>;
@@ -464,6 +465,7 @@
     <span class="prelude-val">Err</span> { <span class="ident">error</span>: <span class="ident">Error</span>, <span class="ident">id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Id</span><span class="op">&gt;</span> },
 }
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
 <span class="doccomment">/// An incoming JSON-RPC message.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
