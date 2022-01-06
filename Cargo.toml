@@ -21,6 +21,7 @@ maintenance = { status = "experimental" }
 default = ["runtime-tokio"]
 runtime-agnostic = ["async-codec-lite"]
 runtime-tokio = ["tokio", "tokio-util"]
+proposed = ["lsp/proposed"]
 
 [dependencies]
 anyhow = "1.0"
