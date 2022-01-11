@@ -296,7 +296,7 @@ fn gen_server_router(trait_name: &syn::Ident, methods: &[MethodCall]) -> proc_ma
                 server: T,
                 state: &Arc<State>,
                 pending: &ServerRequests,
-                request: ServerRequest,
+                request: Box<ServerRequest>,
             ) -> Pin<Box<dyn Future<Output = Result<Option<Outgoing>, ExitedError>> + Send>> {
                 use Params::*;
 

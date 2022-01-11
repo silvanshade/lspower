@@ -107,7 +107,7 @@ enum ResponseKind {
 #[serde(untagged)]
 pub enum Incoming {
     /// Request intended for the language server.
-    Request(crate::generated_impl::ServerRequest),
+    Request(Box<crate::generated_impl::ServerRequest>),
     /// Response to a server-to-client request.
     Response(Response),
 }
