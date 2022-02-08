@@ -11,8 +11,8 @@ and pass it around as needed.</p>
 Closing the client is not required but doing so will ensure that no more messages can be
 produced. The receiver of the messages will be able to consume any in-flight messages and
 then will observe the end of the stream.</p>
-<p>If the client is never closed and never dropped the reveiver of the messages will never observe the end of
-the stream.</p>
+<p>If the client is never closed and never dropped the reveiver of the messages will never
+observe the end of the stream.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.log_message" class="method has-srclink"><span class="rightside"><a class="srclink" href="../src/lspower/client.rs.html#155-159">source</a></span><a href="#method.log_message" class="anchor"></a><h4 class="code-header">pub async fn <a href="#method.log_message" class="fnname">log_message</a>&lt;M:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html" title="trait core::fmt::Display">Display</a>&gt;(&amp;self, typ: MessageType, message: M)</h4></section></summary><div class="docblock"><p>Notifies the client to log a particular message.</p>
 <p>This corresponds to the <a href="https://microsoft.github.io/language-server-protocol/specification#window_logMessage"><code>window/logMessage</code></a> notification.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.show_message" class="method has-srclink"><span class="rightside"><a class="srclink" href="../src/lspower/client.rs.html#166-170">source</a></span><a href="#method.show_message" class="anchor"></a><h4 class="code-header">pub async fn <a href="#method.show_message" class="fnname">show_message</a>&lt;M:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html" title="trait core::fmt::Display">Display</a>&gt;(&amp;self, typ: MessageType, message: M)</h4></section></summary><div class="docblock"><p>Notifies the client to display a particular message in the user interface.</p>

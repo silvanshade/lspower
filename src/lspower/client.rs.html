@@ -1005,8 +1005,8 @@
     <span class="doccomment">/// produced. The receiver of the messages will be able to consume any in-flight messages and</span>
     <span class="doccomment">/// then will observe the end of the stream.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// If the client is never closed and never dropped the reveiver of the messages will never observe the end of</span>
-    <span class="doccomment">/// the stream.</span>
+    <span class="doccomment">/// If the client is never closed and never dropped the reveiver of the messages will never</span>
+    <span class="doccomment">/// observe the end of the stream.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sender</span>.<span class="ident">clone</span>();
         <span class="ident">sender</span>.<span class="ident">close_channel</span>();
