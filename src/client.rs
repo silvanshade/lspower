@@ -140,8 +140,8 @@ impl Client {
     /// produced. The receiver of the messages will be able to consume any in-flight messages and
     /// then will observe the end of the stream.
     ///
-    /// If the client is never closed and never dropped the reveiver of the messages will never observe the end of
-    /// the stream.
+    /// If the client is never closed and never dropped the reveiver of the messages will never
+    /// observe the end of the stream.
     pub fn close(&self) {
         let mut sender = self.inner.sender.clone();
         sender.close_channel();

@@ -132,7 +132,7 @@ impl Service<crate::jsonrpc::Incoming> for LspService {
                     log::trace!("received client response: {:?}", res);
                     self.pending_client.insert(res);
                     future::ok(None).boxed()
-                }
+                },
             }
         }
     }
