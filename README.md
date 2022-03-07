@@ -14,6 +14,12 @@
   </p>
 </div>
 
+## Note
+
+__This crate has been re-merged with [tower-lsp](https://github.com/ebkalderon/tower-lsp) and is now deprecated.__
+
+## Description
+
 Tower is a simple and composable framework for implementing asynchronous
 services in Rust. Central to Tower is the [`Service`] trait, which provides the
 necessary abstractions for defining request/response clients and servers.
